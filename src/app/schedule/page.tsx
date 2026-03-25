@@ -1,0 +1,171 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import PageHero from "@/components/PageHero";
+
+export const metadata: Metadata = {
+  title: "Schedule",
+  description:
+    "2026 tournament schedule for Jesus Rules Ministries — AVP League, Heritage Majors, and Heritage Contenders.",
+};
+
+interface Tournament {
+  name: string;
+  dates: string;
+  location: string;
+}
+
+const heritageContenders: Tournament[] = [
+  { name: "AVP Austin Open", dates: "April 17–19", location: "Austin, TX" },
+  { name: "AVP Pompano Open", dates: "May 23–24", location: "Pompano, FL" },
+  { name: "AVP Virginia Beach Open", dates: "June 13–14", location: "Virginia Beach, VA" },
+  { name: "AVP Denver Open", dates: "July 3–5", location: "Denver, CO" },
+  { name: "AVP Waupaca Open", dates: "July 8–10", location: "Oshkosh, WI" },
+  { name: "AVP Mother Lode", dates: "September 5–7", location: "Aspen, CO" },
+  { name: "AVP Midwest Open", dates: "September 25–27", location: "Edwardsville, IL" },
+];
+
+const heritageMajors: Tournament[] = [
+  { name: "AVP Huntington Beach Open", dates: "May 15–17", location: "Huntington Beach, CA" },
+  { name: "AVP Manhattan Beach Open", dates: "August 14–16", location: "Manhattan Beach, CA" },
+  { name: "AVP Laguna Open", dates: "September 18–20", location: "Laguna Beach, CA" },
+];
+
+const avpLeague: Tournament[] = [
+  { name: "Week 1", dates: "June 6–7", location: "Aspen, CO" },
+  { name: "Week 2", dates: "June 12–13", location: "Miami, FL" },
+  { name: "Week 3", dates: "June 19–20", location: "Las Vegas, NV" },
+  { name: "Week 4", dates: "June 27–28", location: "Belmar, NJ" },
+  { name: "Week 5", dates: "July 11–12", location: "Los Angeles, CA" },
+  { name: "Week 6", dates: "July 18–19", location: "New York, NY" },
+  { name: "Week 7", dates: "August 1–2", location: "East Hampton, NY" },
+  { name: "Week 8", dates: "August 7–8", location: "Dallas, TX" },
+  { name: "Championships", dates: "September 5–6", location: "Chicago, IL" },
+];
+
+const otherEvents: Tournament[] = [
+  { name: "Seaside Beach Volleyball Tournament", dates: "August 5–9", location: "Seaside, OR" },
+];
+
+function TournamentSection({
+  label,
+  title,
+  tournaments,
+}: {
+  label: string;
+  title: string;
+  tournaments: Tournament[];
+}) {
+  return (
+    <div className="mb-14">
+      <p className="text-[11px] font-body font-semibold text-gold tracking-[0.25em] uppercase mb-3">
+        {label}
+      </p>
+      <h2 className="font-heading text-2xl sm:text-3xl text-text-primary mb-8 tracking-tight">
+        {title}
+      </h2>
+      <div className="divide-y divide-white/5">
+        {tournaments.map((t, i) => (
+          <div
+            key={i}
+            className="grid grid-cols-12 gap-4 py-5 items-baseline"
+          >
+            <div className="col-span-5 sm:col-span-5">
+              <span className="text-text-primary text-sm font-medium">{t.name}</span>
+            </div>
+            <div className="col-span-3 sm:col-span-3">
+              <span className="text-text-secondary text-sm">{t.dates}</span>
+            </div>
+            <div className="col-span-4 sm:col-span-4">
+              <span className="text-text-secondary text-sm">{t.location}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function SchedulePage() {
+  return (
+    <div>
+      <PageHero
+        image="/images/editorial/chicago-competition.jpg"
+        label="2026 Season"
+        title="Tournament Schedule"
+        description="Follow us across the country as we compete on the AVP tour and bring the Gospel to every city we visit."
+      />
+
+      {/* Schedule */}
+      <section className="pb-20 sm:pb-28 bg-cream">
+        <div className="max-w-3xl mx-auto px-8 sm:px-12 lg:px-10 pt-20">
+          {/* Column headers */}
+          <div className="grid grid-cols-12 gap-4 pb-4 border-b border-white/10 mb-8">
+            <div className="col-span-5">
+              <span className="text-[11px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
+                Event
+              </span>
+            </div>
+            <div className="col-span-3">
+              <span className="text-[11px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
+                Dates
+              </span>
+            </div>
+            <div className="col-span-4">
+              <span className="text-[11px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
+                Location
+              </span>
+            </div>
+          </div>
+
+          <TournamentSection
+            label="Contender Series"
+            title="Heritage Contender Events"
+            tournaments={heritageContenders}
+          />
+          <TournamentSection
+            label="Major Series"
+            title="Heritage Majors"
+            tournaments={heritageMajors}
+          />
+          <TournamentSection
+            label="Pro League"
+            title="AVP League"
+            tournaments={avpLeague}
+          />
+          <TournamentSection
+            label="Other Events"
+            title="Other"
+            tournaments={otherEvents}
+          />
+
+          <div className="mt-4 pt-8 border-t border-white/5">
+            <p className="text-text-muted text-xs leading-relaxed">
+              FIVB Beach Pro Tour international events will be added as confirmed.
+              Schedule subject to change. Follow{" "}
+              <a
+                href="https://instagram.com/diegonickperez"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gold hover:text-gold-light transition-colors"
+              >
+                @diegonickperez
+              </a>{" "}
+              for real-time updates.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Full-width image */}
+      <section className="relative h-[50vh] overflow-hidden">
+        <Image
+          src="/images/editorial/net-action.png"
+          alt="Players at the net during beach volleyball match"
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+      </section>
+    </div>
+  );
+}
