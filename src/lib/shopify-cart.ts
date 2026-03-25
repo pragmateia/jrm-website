@@ -112,9 +112,17 @@ function parseCart(cart: Record<string, unknown>): ShopifyCart {
       edges: { node: CartLine }[];
     };
   };
+  // Shopify returns checkout URLs using the custom domain (jesusrules.co),
+  // but that domain points to Vercel, not Shopify. Rewrite to myshopify.com
+  // so checkout goes directly to Shopify's servers.
+  const checkoutUrl = c.checkoutUrl.replace(
+    /https:\/\/(www\.)?jesusrules\.co/,
+    `https://${domain}`
+  );
+
   return {
     id: c.id,
-    checkoutUrl: c.checkoutUrl,
+    checkoutUrl,
     totalQuantity: c.totalQuantity,
     cost: c.cost,
     lines: c.lines.edges.map((e) => e.node),
