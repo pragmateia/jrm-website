@@ -253,7 +253,7 @@ export default function DonatePage() {
               },
               {
                 title: "Check",
-                text: <>Make payable to &quot;Jesus Rules Ministries&quot; and mail to 8605 Santa Monica Blvd #216891, West Hollywood, CA 90069.</>,
+                text: <>Make payable to &quot;Jesus Rules Ministries&quot; — email <span className="text-gold">info@jesusrules.co</span> for our mailing address.</>,
               },
               {
                 title: "Church Partnership",
