@@ -33,6 +33,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    handleScroll(); // Set initial scroll state on mount/navigation
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);

@@ -20,7 +20,7 @@ const donationPaths = [
 
 export default function DonateHero() {
   return (
-    <section className="relative flex flex-col items-end justify-end min-h-screen">
+    <section className="relative flex flex-col items-end justify-end min-h-screen pt-24">
       <Image
         src="/images/great-park-team.png"
         alt="Team at the Great Park"
