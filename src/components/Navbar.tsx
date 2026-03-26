@@ -60,7 +60,7 @@ export default function Navbar() {
               height={36}
               className="w-9 h-9 object-contain"
             />
-            <span className="font-body text-[13px] font-semibold tracking-[0.2em] uppercase hidden sm:block text-white">
+            <span className="font-body text-[13px] font-semibold tracking-[0.2em] uppercase text-white">
               Jesus Rules
             </span>
           </Link>
