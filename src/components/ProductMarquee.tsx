@@ -73,12 +73,26 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
   }, [getOneSetSize]);
 
   // Auto-scroll animation loop — runs continuously, checks paused ref each frame
+  const hasRandomized = useRef(false);
   useEffect(() => {
     let raf: number;
     const tick = () => {
       if (!containerRef.current || !innerRef.current) {
         raf = requestAnimationFrame(tick);
         return;
+      }
+      // Start at a random position on first meaningful frame
+      if (!hasRandomized.current) {
+        const oneSet = getOneSetSize();
+        if (oneSet > 0) {
+          scrollPos.current = Math.random() * oneSet;
+          if (isVertical) {
+            containerRef.current.scrollTop = scrollPos.current;
+          } else {
+            containerRef.current.scrollLeft = scrollPos.current;
+          }
+          hasRandomized.current = true;
+        }
       }
       if (!paused.current) {
         scrollPos.current += 0.5;
@@ -93,7 +107,7 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [isVertical, wrapScrollPos]);
+  }, [isVertical, wrapScrollPos, getOneSetSize]);
 
   // --- Mouse handlers (desktop) ---
   const handleMouseEnter = () => {
