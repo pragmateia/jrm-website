@@ -102,7 +102,18 @@ export interface ShopifyVariant {
   product: { handle: string; title: string };
 }
 
-export async function getProductVariants(): Promise<ShopifyVariant[]> {
+/** Product-level images returned alongside variants for back-image detection */
+export interface ProductImages {
+  handle: string;
+  title: string;
+  images: { url: string; altText: string | null }[];
+  variantImageUrls: Set<string>;
+}
+
+export async function getProductVariants(): Promise<{
+  variants: ShopifyVariant[];
+  productImages: ProductImages[];
+}> {
   const query = `
     {
       products(first: 20, sortKey: BEST_SELLING) {
@@ -110,6 +121,14 @@ export async function getProductVariants(): Promise<ShopifyVariant[]> {
           node {
             handle
             title
+            images(first: 100) {
+              edges {
+                node {
+                  url
+                  altText
+                }
+              }
+            }
             variants(first: 100) {
               edges {
                 node {
@@ -137,11 +156,31 @@ export async function getProductVariants(): Promise<ShopifyVariant[]> {
   `;
 
   const data = await shopifyFetch(query);
-  if (!data?.data?.products?.edges) return [];
+  if (!data?.data?.products?.edges) return { variants: [], productImages: [] };
 
   const variants: ShopifyVariant[] = [];
+  const productImages: ProductImages[] = [];
+
   for (const productEdge of data.data.products.edges) {
     const product = productEdge.node;
+
+    // Collect all variant image URLs for this product
+    const variantImageUrls = new Set<string>();
+    for (const variantEdge of product.variants.edges) {
+      const v = variantEdge.node;
+      if (v.image?.url) variantImageUrls.add(v.image.url);
+    }
+
+    // Store product-level images for back-image detection
+    productImages.push({
+      handle: product.handle,
+      title: product.title,
+      images: product.images.edges.map(
+        (e: { node: { url: string; altText: string | null } }) => e.node
+      ),
+      variantImageUrls,
+    });
+
     for (const variantEdge of product.variants.edges) {
       const v = variantEdge.node;
       if (!v.image) continue;
@@ -159,7 +198,7 @@ export async function getProductVariants(): Promise<ShopifyVariant[]> {
       });
     }
   }
-  return variants;
+  return { variants, productImages };
 }
 
 export function getProductUrl(handle: string): string {

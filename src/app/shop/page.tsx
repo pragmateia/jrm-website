@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { getProducts, getProductVariants } from "@/lib/shopify";
+import type { ProductImages } from "@/lib/shopify";
 import ProductMarquee from "@/components/ProductMarquee";
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ function shuffle<T>(array: T[]): T[] {
 
 export default async function ShopPage() {
   const shopifyProducts = await getProducts(20);
-  const variants = await getProductVariants();
+  const { variants, productImages } = await getProductVariants();
   const hasShopify = shopifyProducts.length > 0;
 
   // Group variants by product for the Shop All rows
@@ -47,14 +48,54 @@ export default async function ShopPage() {
   // Randomize product order — reshuffles each revalidation cycle
   shuffle(variantsByProduct);
 
-  // Build marquee items — every color variant with its own image (shuffled)
+  // Helper: find the back image for a variant front image using the same
+  // logic as ProductDetailClient — the next image in the product's image list
+  // that isn't another variant's front image.
+  function findBackImage(
+    frontUrl: string,
+    prodImgs: ProductImages
+  ): { url: string; altText: string | null } | null {
+    const frontIdx = prodImgs.images.findIndex((img) => img.url === frontUrl);
+    if (frontIdx === -1 || frontIdx + 1 >= prodImgs.images.length) return null;
+    const nextImg = prodImgs.images[frontIdx + 1];
+    // Only treat as "back" if it's not another variant's front image
+    if (prodImgs.variantImageUrls.has(nextImg.url)) return null;
+    return nextImg;
+  }
+
+  // Build a lookup from product handle to ProductImages
+  const productImagesMap = new Map<string, ProductImages>();
+  for (const pi of productImages) {
+    productImagesMap.set(pi.handle, pi);
+  }
+
+  // Build marquee items — front + back image for each color variant (shuffled)
   const marqueeItems = variants.length > 0
-    ? shuffle(variants.map((v) => ({
-        id: v.id,
-        title: `${v.product.title} — ${v.title}`,
-        image: v.image?.url || "/images/logo-white.png",
-        href: `/shop/${v.product.handle}`,
-      })))
+    ? shuffle(variants.flatMap((v) => {
+        const frontUrl = v.image?.url || "/images/logo-white.png";
+        const items = [
+          {
+            id: v.id,
+            title: `${v.product.title} — ${v.title}`,
+            image: frontUrl,
+            href: `/shop/${v.product.handle}`,
+          },
+        ];
+        // Add back image if available (not a size chart)
+        const prodImgs = productImagesMap.get(v.product.handle);
+        if (prodImgs && v.image?.url) {
+          const back = findBackImage(v.image.url, prodImgs);
+          if (back) {
+            items.push({
+              id: `${v.id}-back`,
+              title: `${v.product.title} — ${v.title} (Back)`,
+              image: back.url,
+              href: `/shop/${v.product.handle}`,
+            });
+          }
+        }
+        return items;
+      }))
     : placeholderProducts.map((p) => ({
         id: p.id,
         title: p.title,
