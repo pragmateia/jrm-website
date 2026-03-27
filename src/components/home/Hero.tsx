@@ -75,8 +75,8 @@ export default function Hero() {
         <p className="text-[12px] sm:text-[13px] font-body font-semibold tracking-[0.3em] uppercase text-white/80 mb-5">
           Jesus Rules Ministries
         </p>
-        <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-white leading-[1.1] mb-6 max-w-4xl">
-          Using the Gifts God Gave Us
+        <h1 className="font-heading text-[clamp(1.75rem,5vw,4.5rem)] text-white leading-[1.1] mb-6">
+          <span className="whitespace-nowrap">Using the Gifts God Gave Us</span>
           <br />
           <em className="text-gold-light" style={{ textShadow: "0 0 40px rgba(201, 168, 125, 0.55)" }}>to Preach the Gospel</em>
         </h1>
