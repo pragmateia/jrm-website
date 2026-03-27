@@ -42,10 +42,11 @@ export default function ProductGallery({
   }
 
   return (
-    <div className="flex flex-row gap-3">
-      {/* Thumbnails */}
+    <div className={images.length > 1 ? "grid grid-cols-[auto_1fr] gap-3" : ""}>
+      {/* Thumbnails — min-h-0 lets grid row height be set by the main image column */}
       {images.length > 1 && (
-        <div className="flex flex-col gap-2 overflow-y-auto max-h-[60vh] sm:max-h-[600px] scrollbar-hide">
+        <div className="min-h-0 overflow-y-auto scrollbar-hide">
+          <div className="flex flex-col gap-2">
           {images.map((img, i) => (
             <button
               key={img.url}
@@ -68,11 +69,12 @@ export default function ProductGallery({
               />
             </button>
           ))}
+          </div>
         </div>
       )}
 
       {/* Main image + front/back toggle */}
-      <div className="flex-1 flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {/* Main image */}
         <div className="aspect-square max-h-[70vh] relative bg-[#e8e8e8] overflow-hidden">
           <Image
