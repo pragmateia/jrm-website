@@ -54,6 +54,27 @@ export default function ProductDetailClient({
     ? parseFloat(selectedVariant.price.amount).toFixed(2)
     : parseFloat(variants[0].price.amount).toFixed(2);
 
+  // Build a set of all variant front image URLs
+  const variantImageUrls = useMemo(() => {
+    const urls = new Set<string>();
+    for (const v of variants) {
+      if (v.image?.url) urls.add(v.image.url);
+    }
+    return urls;
+  }, [variants]);
+
+  // Find the back image for the selected variant's color
+  const backImage = useMemo(() => {
+    const frontUrl = selectedVariant?.image?.url;
+    if (!frontUrl) return null;
+    const frontIdx = images.findIndex((img) => img.url === frontUrl);
+    if (frontIdx === -1 || frontIdx + 1 >= images.length) return null;
+    const nextImg = images[frontIdx + 1];
+    // Only treat as "back" if it's not another variant's front image
+    if (variantImageUrls.has(nextImg.url)) return null;
+    return nextImg;
+  }, [selectedVariant, images, variantImageUrls]);
+
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
       <div className="max-w-6xl mx-auto px-6 sm:px-10">
@@ -76,6 +97,7 @@ export default function ProductDetailClient({
           <ProductGallery
             images={images}
             selectedImage={selectedVariant?.image?.url}
+            backImage={backImage}
           />
 
           {/* Right — Product info */}
