@@ -9,23 +9,54 @@ import AddToCartButton from "./AddToCartButton";
 
 export default function ProductDetailClient({
   product,
+  initialColor,
 }: {
   product: ShopifyProductDetail;
+  initialColor?: string;
 }) {
   const variants = product.variants.edges.map((e) => e.node);
   const images = product.images.edges.map((e) => e.node);
 
-  // Initialize selected options — prefer Large size, then first available variant
-  const initialVariant =
-    variants.find(
-      (v) =>
-        v.availableForSale &&
-        v.selectedOptions.some(
-          (so) => so.name.toLowerCase() === "size" && so.value.toUpperCase() === "L"
-        )
-    ) ||
-    variants.find((v) => v.availableForSale) ||
-    variants[0];
+  // Initialize selected options:
+  // 1. If initialColor is provided (from ?color= query param), prefer that color in size L
+  // 2. Otherwise prefer size L, then first available variant
+  const initialVariant = (() => {
+    if (initialColor) {
+      // Try: matching color + size L + available
+      const colorAndSizeL = variants.find(
+        (v) =>
+          v.availableForSale &&
+          v.selectedOptions.some(
+            (so) => so.name.toLowerCase() === "color" && so.value === initialColor
+          ) &&
+          v.selectedOptions.some(
+            (so) => so.name.toLowerCase() === "size" && so.value.toUpperCase() === "L"
+          )
+      );
+      if (colorAndSizeL) return colorAndSizeL;
+      // Fallback: matching color + available (any size)
+      const colorOnly = variants.find(
+        (v) =>
+          v.availableForSale &&
+          v.selectedOptions.some(
+            (so) => so.name.toLowerCase() === "color" && so.value === initialColor
+          )
+      );
+      if (colorOnly) return colorOnly;
+    }
+    // Default: size L + available, then any available, then first
+    return (
+      variants.find(
+        (v) =>
+          v.availableForSale &&
+          v.selectedOptions.some(
+            (so) => so.name.toLowerCase() === "size" && so.value.toUpperCase() === "L"
+          )
+      ) ||
+      variants.find((v) => v.availableForSale) ||
+      variants[0]
+    );
+  })();
 
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>

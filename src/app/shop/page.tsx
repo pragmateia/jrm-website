@@ -70,15 +70,18 @@ export default async function ShopPage() {
   }
 
   // Build marquee items — front + back image for each color variant (shuffled)
+  // Extract color from variant title (e.g. "Navy / L" → "Navy", or just "Navy" if no size)
   const marqueeItems = variants.length > 0
     ? shuffle(variants.flatMap((v) => {
         const frontUrl = v.image?.url || "/images/logo-white.png";
+        const color = v.title.includes(" / ") ? v.title.split(" / ")[0] : v.title;
+        const colorParam = `?color=${encodeURIComponent(color)}`;
         const items = [
           {
             id: v.id,
             title: `${v.product.title} — ${v.title}`,
             image: frontUrl,
-            href: `/shop/${v.product.handle}`,
+            href: `/shop/${v.product.handle}${colorParam}`,
           },
         ];
         // Add back image if available (not a size chart)
@@ -90,7 +93,7 @@ export default async function ShopPage() {
               id: `${v.id}-back`,
               title: `${v.product.title} — ${v.title} (Back)`,
               image: back.url,
-              href: `/shop/${v.product.handle}`,
+              href: `/shop/${v.product.handle}${colorParam}`,
             });
           }
         }
@@ -200,10 +203,12 @@ export default async function ShopPage() {
                   </div>
                   <div className="overflow-x-auto scrollbar-hide">
                     <div className="flex gap-3 pl-8 sm:pl-12 lg:pl-10 pr-8 pb-2" style={{ minWidth: "max-content" }}>
-                      {product.variants.map((v) => (
+                      {product.variants.map((v) => {
+                        const color = v.title.includes(" / ") ? v.title.split(" / ")[0] : v.title;
+                        return (
                         <Link
                           key={v.id}
-                          href={`/shop/${v.product.handle}`}
+                          href={`/shop/${v.product.handle}?color=${encodeURIComponent(color)}`}
                           className="group flex-shrink-0 w-[200px] sm:w-[220px]"
                         >
                           <div className="aspect-[3/4] relative bg-white/[0.06] border border-white/[0.06] overflow-hidden mb-2">
@@ -224,7 +229,8 @@ export default async function ShopPage() {
                           <p className="text-[11px] text-white/50 line-clamp-1">{v.title}</p>
                           <p className="text-[11px] text-white/40">${parseFloat(v.price).toFixed(2)}</p>
                         </Link>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

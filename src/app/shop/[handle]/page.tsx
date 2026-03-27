@@ -5,6 +5,7 @@ import ProductDetailClient from "@/components/shop/ProductDetailClient";
 
 interface Props {
   params: Promise<{ handle: string }>;
+  searchParams: Promise<{ color?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -23,11 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage({ params, searchParams }: Props) {
   const { handle } = await params;
+  const { color } = await searchParams;
   const product = await getProductByHandle(handle);
 
   if (!product) notFound();
 
-  return <ProductDetailClient product={product} />;
+  return <ProductDetailClient product={product} initialColor={color} />;
 }
