@@ -39,6 +39,9 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
   const paused = useRef(false);
   // Track momentum after touch release for smooth handoff
   const touchEndTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ease-in speed multiplier for smooth resume after touch
+  const easeIn = useRef(1);
+  const isEasing = useRef(false);
 
   // Sync scrollPos from the container's actual position
   const syncScrollPos = useCallback(() => {
@@ -95,7 +98,12 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
         }
       }
       if (!paused.current) {
-        scrollPos.current += 0.5;
+        // Ease back in after touch release
+        if (isEasing.current) {
+          easeIn.current = Math.min(easeIn.current + 0.005, 1);
+          if (easeIn.current >= 1) isEasing.current = false;
+        }
+        scrollPos.current += 0.5 * easeIn.current;
         wrapScrollPos();
         if (isVertical) {
           containerRef.current.scrollTop = scrollPos.current;
@@ -161,13 +169,31 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
   };
 
   const handleTouchEnd = () => {
-    // After the user lifts their finger, the browser may still be
-    // decelerating a momentum scroll. Wait a bit before resuming
-    // auto-scroll so we don't fight the momentum.
-    touchEndTimer.current = setTimeout(() => {
+    // Poll until momentum scroll actually stops, then ease back in
+    let lastPos = isVertical
+      ? containerRef.current?.scrollTop ?? 0
+      : containerRef.current?.scrollLeft ?? 0;
+    let stillFrames = 0;
+
+    const check = () => {
+      const pos = isVertical
+        ? containerRef.current?.scrollTop ?? 0
+        : containerRef.current?.scrollLeft ?? 0;
+      if (Math.abs(pos - lastPos) < 0.5) {
+        stillFrames++;
+      } else {
+        stillFrames = 0;
+      }
+      lastPos = pos;
+
+      // Wait until scroll has been still for ~10 frames (~160ms)
+      if (stillFrames < 10) {
+        touchEndTimer.current = setTimeout(check, 16);
+        return;
+      }
+
       syncScrollPos();
       wrapScrollPos();
-      // Apply the wrapped position so there's no visual jump
       if (containerRef.current) {
         if (isVertical) {
           containerRef.current.scrollTop = scrollPos.current;
@@ -175,9 +201,15 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
           containerRef.current.scrollLeft = scrollPos.current;
         }
       }
+      // Ease back into auto-scroll speed
+      easeIn.current = 0;
+      isEasing.current = true;
       paused.current = false;
       touchEndTimer.current = null;
-    }, 800);
+    };
+
+    // Start checking after a short initial delay
+    touchEndTimer.current = setTimeout(check, 50);
   };
 
   // Fires during both mouse-drag and native touch scroll
