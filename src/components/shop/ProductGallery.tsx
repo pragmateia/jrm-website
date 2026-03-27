@@ -42,11 +42,10 @@ export default function ProductGallery({
   }
 
   return (
-    <div className={images.length > 1 ? "grid grid-cols-[auto_1fr] gap-3" : ""}>
-      {/* Thumbnails — min-h-0 lets grid row height be set by the main image column */}
+    <div className={images.length > 1 ? "flex flex-col-reverse gap-3 sm:grid sm:grid-cols-[auto_1fr]" : ""}>
+      {/* Thumbnails — horizontal scroll on mobile, vertical on left (grid-constrained) on desktop */}
       {images.length > 1 && (
-        <div className="min-h-0 overflow-y-auto scrollbar-hide">
-          <div className="flex flex-col gap-2">
+        <div className="flex gap-2 overflow-x-auto sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:min-h-0 scrollbar-hide">
           {images.map((img, i) => (
             <button
               key={img.url}
@@ -69,7 +68,6 @@ export default function ProductGallery({
               />
             </button>
           ))}
-          </div>
         </div>
       )}
 
