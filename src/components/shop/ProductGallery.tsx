@@ -87,7 +87,7 @@ export default function ProductGallery({
 
         {/* Front/Back toggle — only shown when a back image is available */}
         {backImage && selectedImage && (
-          <div className="flex gap-2">
+          <div className="flex justify-center gap-3">
             <button
               onClick={() => {
                 setActiveSide("front");
@@ -96,7 +96,7 @@ export default function ProductGallery({
                   if (idx !== -1) setActiveIndex(idx);
                 }
               }}
-              className={`w-16 h-20 relative overflow-hidden bg-[#e8e8e8] border transition-colors ${
+              className={`w-20 h-24 relative overflow-hidden bg-[#e8e8e8] border-2 transition-colors ${
                 activeSide === "front"
                   ? "border-gold"
                   : "border-white/10 hover:border-white/30"
@@ -107,15 +107,15 @@ export default function ProductGallery({
                 alt="Front"
                 fill
                 className="object-cover"
-                sizes="64px"
+                sizes="80px"
               />
-              <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[9px] text-white/80 text-center py-0.5 font-body">
+              <span className="absolute bottom-0 inset-x-0 bg-black/70 text-[10px] text-white/90 text-center py-0.5 font-body tracking-wide">
                 Front
               </span>
             </button>
             <button
               onClick={() => setActiveSide("back")}
-              className={`w-16 h-20 relative overflow-hidden bg-[#e8e8e8] border transition-colors ${
+              className={`w-20 h-24 relative overflow-hidden bg-[#e8e8e8] border-2 transition-colors ${
                 activeSide === "back"
                   ? "border-gold"
                   : "border-white/10 hover:border-white/30"
@@ -126,9 +126,9 @@ export default function ProductGallery({
                 alt="Back"
                 fill
                 className="object-cover"
-                sizes="64px"
+                sizes="80px"
               />
-              <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[9px] text-white/80 text-center py-0.5 font-body">
+              <span className="absolute bottom-0 inset-x-0 bg-black/70 text-[10px] text-white/90 text-center py-0.5 font-body tracking-wide">
                 Back
               </span>
             </button>
