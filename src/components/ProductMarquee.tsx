@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 
 interface MarqueeItem {
   id: string;
@@ -30,12 +30,49 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  const [hovered, setHovered] = useState(false);
   const scrollPos = useRef(0);
   const isDragging = useRef(false);
   const dragStart = useRef(0);
   const dragScrollStart = useRef(0);
+  // Use a ref instead of state so the rAF loop reads it synchronously
+  // without needing to restart the effect on every hover/touch change
+  const paused = useRef(false);
+  // Track momentum after touch release for smooth handoff
+  const touchEndTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Sync scrollPos from the container's actual position
+  const syncScrollPos = useCallback(() => {
+    if (containerRef.current) {
+      scrollPos.current = isVertical
+        ? containerRef.current.scrollTop
+        : containerRef.current.scrollLeft;
+    }
+  }, [isVertical]);
+
+  // Get one set size for infinite loop wrapping
+  const getOneSetSize = useCallback(() => {
+    if (!innerRef.current) return 0;
+    return isVertical
+      ? innerRef.current.scrollHeight / 3
+      : innerRef.current.scrollWidth / 3;
+  }, [isVertical]);
+
+  // Wrap scroll position for infinite loop
+  const wrapScrollPos = useCallback(() => {
+    const oneSetSize = getOneSetSize();
+    if (oneSetSize > 0) {
+      // Wrap forward
+      while (scrollPos.current >= oneSetSize * 2) {
+        scrollPos.current -= oneSetSize;
+      }
+      // Wrap backward
+      while (scrollPos.current < 0) {
+        scrollPos.current += oneSetSize;
+      }
+    }
+  }, [getOneSetSize]);
+
+  // Auto-scroll animation loop — runs continuously, checks paused ref each frame
   useEffect(() => {
     let raf: number;
     const tick = () => {
@@ -43,14 +80,9 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
         raf = requestAnimationFrame(tick);
         return;
       }
-      if (!hovered) {
+      if (!paused.current) {
         scrollPos.current += 0.5;
-        const oneSetSize = isVertical
-          ? innerRef.current.scrollHeight / 3
-          : innerRef.current.scrollWidth / 3;
-        if (oneSetSize > 0 && scrollPos.current >= oneSetSize) {
-          scrollPos.current -= oneSetSize;
-        }
+        wrapScrollPos();
         if (isVertical) {
           containerRef.current.scrollTop = scrollPos.current;
         } else {
@@ -61,25 +93,19 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [hovered, isVertical]);
+  }, [isVertical, wrapScrollPos]);
 
+  // --- Mouse handlers (desktop) ---
   const handleMouseEnter = () => {
-    setHovered(true);
-    if (containerRef.current) {
-      scrollPos.current = isVertical
-        ? containerRef.current.scrollTop
-        : containerRef.current.scrollLeft;
-    }
+    paused.current = true;
+    syncScrollPos();
   };
 
   const handleMouseLeave = () => {
     isDragging.current = false;
-    if (containerRef.current) {
-      scrollPos.current = isVertical
-        ? containerRef.current.scrollTop
-        : containerRef.current.scrollLeft;
-    }
-    setHovered(false);
+    syncScrollPos();
+    wrapScrollPos();
+    paused.current = false;
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -107,13 +133,56 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
     isDragging.current = false;
   };
 
+  // --- Touch handlers (mobile) ---
+  // On touch, we pause auto-scroll immediately so the browser's native
+  // scroll can take over. We manage scrollPos via the onScroll handler
+  // so that when we resume auto-scroll, it picks up from where the user left off.
+  const handleTouchStart = () => {
+    // Clear any pending resume timer from a previous touch
+    if (touchEndTimer.current) {
+      clearTimeout(touchEndTimer.current);
+      touchEndTimer.current = null;
+    }
+    paused.current = true;
+  };
+
+  const handleTouchEnd = () => {
+    // After the user lifts their finger, the browser may still be
+    // decelerating a momentum scroll. Wait a bit before resuming
+    // auto-scroll so we don't fight the momentum.
+    touchEndTimer.current = setTimeout(() => {
+      syncScrollPos();
+      wrapScrollPos();
+      // Apply the wrapped position so there's no visual jump
+      if (containerRef.current) {
+        if (isVertical) {
+          containerRef.current.scrollTop = scrollPos.current;
+        } else {
+          containerRef.current.scrollLeft = scrollPos.current;
+        }
+      }
+      paused.current = false;
+      touchEndTimer.current = null;
+    }, 800);
+  };
+
+  // Fires during both mouse-drag and native touch scroll
   const handleScroll = () => {
-    if (hovered && containerRef.current) {
+    if (paused.current && containerRef.current) {
       scrollPos.current = isVertical
         ? containerRef.current.scrollTop
         : containerRef.current.scrollLeft;
     }
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (touchEndTimer.current) {
+        clearTimeout(touchEndTimer.current);
+      }
+    };
+  }, []);
 
   if (!items || items.length === 0) return null;
 
@@ -125,11 +194,14 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
       className={`scrollbar-hide cursor-grab active:cursor-grabbing ${
         isVertical ? "overflow-y-auto h-full" : "overflow-x-auto"
       }`}
+      style={{ WebkitOverflowScrolling: "touch" }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       onScroll={handleScroll}
     >
       <div
