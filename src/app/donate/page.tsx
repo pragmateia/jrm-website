@@ -42,17 +42,17 @@ const categories = [
 const teamMembers = [
   {
     name: "Diego Perez",
-    role: "Professional Athlete",
+    role: "Athlete & Operations",
     description:
-      "Nationally ranked beach volleyball player pursuing the 2028 Olympics. Leads all ministry operations, discipleship training, and Gospel outreach at every tournament.",
+      "Nationally ranked beach volleyball player pursuing the 2028 Olympics. Runs the business side of the ministry — website, merchandise, content, and operations.",
     image: "/images/editorial/diego-signing.jpg",
     href: `https://donorbox.org/${diegoCampaign}`,
   },
   {
     name: "Michael Clark",
-    role: "Head Coach",
+    role: "Head Coach & Ministry Leader",
     description:
-      "Head coach who travels with the team to every tournament. Plays a critical role in athlete development and ministry operations.",
+      "Started the discipleship group that became Jesus Rules Ministries. The relational and directional leader — casts vision, coaches the team, and travels to every tournament.",
     image: "/images/editorial/solomon-conversation.jpg",
     href: "https://meigiving.org/donate/michaelandabby",
   },

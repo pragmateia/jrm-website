@@ -31,7 +31,7 @@ This is going to be our biggest year yet:
 - **International outreach events** — churches and organizations hosting us for volleyball clinics and Gospel preaching
 - **Documentary production** — capturing the ministry's story on film
 
-We're also pursuing something that once felt impossible: **the 2028 LA Olympics.** My partner Dave Wieczorek and I are currently ranked in the top 20 nationally as a team, and we're putting everything on the line to qualify.
+We're also pursuing something that once felt impossible: **the 2028 LA Olympics.** I'm currently ranked in the top 40 nationally and putting everything on the line to qualify.
 
 ## How You Can Be Part of It
 

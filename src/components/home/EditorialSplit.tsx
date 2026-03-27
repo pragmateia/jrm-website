@@ -55,7 +55,7 @@ export default function EditorialSplit() {
     <section className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-background">
       <Panel
         image="/images/editorial/chicago-competition.jpg"
-        alt="Diego and Dave competing at AVP Chicago"
+        alt="Diego competing at AVP Chicago"
         label="Competition"
         title="Built to Compete"
         description="Nationally ranked and pursuing the 2028 LA Olympics while representing Christ on every court."

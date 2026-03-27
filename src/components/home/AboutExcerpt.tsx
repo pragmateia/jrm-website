@@ -31,15 +31,16 @@ export default function AboutExcerpt() {
             <div className="space-y-5 text-text-secondary leading-relaxed">
               <p>
                 Jesus Rules Ministries was founded on a simple conviction:
-                Christians should be the best at what they do. Not to hide from
-                the world, but to step into it with excellence that earns
-                credibility and opens doors for the Gospel.
+                Christians should be the best at what they do — and bring the
+                Gospel with them wherever they go.
               </p>
               <p>
-                Diego Perez, a nationally ranked professional beach volleyball
-                player pursuing the 2028 LA Olympics, leads JRM alongside coach
-                and director Michael Clark. Together they compete on the AVP and
-                FIVB tours worldwide.
+                What started as a small discipleship group at the Great Park in
+                Irvine has grown into a ministry that reaches players and fans at
+                AVP and FIVB tournaments worldwide. Led by nationally ranked
+                athlete Diego Perez and head coach Michael Clark, JRM trains
+                athletes to compete with excellence and share the truth of Christ
+                at every stop.
               </p>
             </div>
             <Link
