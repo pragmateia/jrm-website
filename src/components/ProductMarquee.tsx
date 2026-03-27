@@ -39,9 +39,6 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
   const paused = useRef(false);
   // Track momentum after touch release for smooth handoff
   const touchEndTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Ease-in speed multiplier for smooth resume after touch
-  const easeIn = useRef(1);
-  const isEasing = useRef(false);
 
   // Sync scrollPos from the container's actual position
   const syncScrollPos = useCallback(() => {
@@ -98,12 +95,7 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
         }
       }
       if (!paused.current) {
-        // Ease back in after touch release
-        if (isEasing.current) {
-          easeIn.current = Math.min(easeIn.current + 0.005, 1);
-          if (easeIn.current >= 1) isEasing.current = false;
-        }
-        scrollPos.current += 0.5 * easeIn.current;
+        scrollPos.current += 0.5;
         wrapScrollPos();
         if (isVertical) {
           containerRef.current.scrollTop = scrollPos.current;
@@ -201,9 +193,6 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
           containerRef.current.scrollLeft = scrollPos.current;
         }
       }
-      // Ease back into auto-scroll speed
-      easeIn.current = 0;
-      isEasing.current = true;
       paused.current = false;
       touchEndTimer.current = null;
     };
