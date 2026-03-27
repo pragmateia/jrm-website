@@ -122,6 +122,11 @@ export default function ProductDetailClient({
           </ol>
         </nav>
 
+        {/* Mobile-only title above gallery */}
+        <h1 className="md:hidden font-heading text-3xl text-white tracking-tight mb-4">
+          {product.title}
+        </h1>
+
         {/* Two-column layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
           {/* Left — Gallery */}
@@ -133,7 +138,7 @@ export default function ProductDetailClient({
 
           {/* Right — Product info */}
           <div className="flex flex-col">
-            <h1 className="font-heading text-3xl sm:text-4xl text-white tracking-tight mb-2">
+            <h1 className="hidden md:block font-heading text-3xl sm:text-4xl text-white tracking-tight mb-2">
               {product.title}
             </h1>
 
