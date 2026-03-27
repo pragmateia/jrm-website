@@ -32,8 +32,13 @@ export default function Navbar() {
     setScrollProgress(progress);
   }, []);
 
+  // Reset scroll progress on route change so navbar starts transparent on dark-hero pages
   useEffect(() => {
-    handleScroll(); // Set initial scroll state on mount/navigation
+    setScrollProgress(0);
+  }, [pathname]);
+
+  useEffect(() => {
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);

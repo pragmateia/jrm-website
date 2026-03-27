@@ -163,6 +163,7 @@ export default function AboutPage() {
               <video
                 controls
                 preload="metadata"
+                poster="/images/editorial/diego-highfive.jpg"
                 className="w-full h-full object-cover"
               >
                 <source src="/videos/diego-interview.mp4" type="video/mp4" />
@@ -228,6 +229,7 @@ export default function AboutPage() {
               <video
                 controls
                 preload="metadata"
+                poster="/images/editorial/michael-courtside.jpg"
                 className="w-full h-full object-cover"
               >
                 <source src="/videos/michael-interview.mp4" type="video/mp4" />

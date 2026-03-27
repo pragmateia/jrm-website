@@ -153,7 +153,7 @@ export default async function ShopPage() {
                           href={`/shop/${v.product.handle}`}
                           className="group flex-shrink-0 w-[200px] sm:w-[220px]"
                         >
-                          <div className="aspect-[3/4] relative bg-white/[0.03] overflow-hidden mb-2">
+                          <div className="aspect-[3/4] relative bg-white/[0.06] border border-white/[0.06] overflow-hidden mb-2">
                             {v.image ? (
                               <Image
                                 src={v.image.url}
@@ -184,7 +184,7 @@ export default async function ShopPage() {
                       href={`/shop/${product.handle}`}
                       className="group"
                     >
-                      <div className="aspect-[3/4] relative bg-white/[0.03] flex items-center justify-center overflow-hidden mb-3">
+                      <div className="aspect-[3/4] relative bg-white/[0.06] flex items-center justify-center overflow-hidden mb-3">
                         <Image
                           src={product.image}
                           alt={product.title}
