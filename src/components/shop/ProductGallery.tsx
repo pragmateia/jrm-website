@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 interface GalleryImage {
   url: string;
@@ -11,42 +11,33 @@ interface GalleryImage {
 export default function ProductGallery({
   images,
   selectedImage,
+  backImage,
 }: {
   images: GalleryImage[];
   selectedImage?: string | null;
+  backImage?: string | null;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // When the variant changes (new color/size), jump to that variant's image
+  // When the variant changes, jump to that image and reset flip
   useEffect(() => {
     if (selectedImage) {
       const idx = images.findIndex((img) => img.url === selectedImage);
-      if (idx !== -1) {
-        setActiveIndex(idx);
-        setIsFlipped(false);
-      }
+      if (idx !== -1) setActiveIndex(idx);
     }
+    setIsFlipped(false);
   }, [selectedImage, images]);
 
-  const hasNextImage = activeIndex + 1 < images.length;
-
-  const handleFlip = useCallback(() => {
-    if (isAnimating || !hasNextImage) return;
+  const handleFlip = () => {
+    if (isAnimating || !backImage) return;
     setIsAnimating(true);
     setIsFlipped((prev) => !prev);
     setTimeout(() => setIsAnimating(false), 600);
-  }, [isAnimating, hasNextImage]);
-
-  const handleThumbnailClick = (i: number) => {
-    setActiveIndex(i);
-    setIsFlipped(false);
   };
 
-  // The front image is the active one, the back is the next one
   const frontImage = images[activeIndex];
-  const backImage = hasNextImage ? images[activeIndex + 1] : null;
 
   if (images.length === 0) {
     return (
@@ -58,15 +49,15 @@ export default function ProductGallery({
 
   return (
     <div className="flex flex-col-reverse sm:flex-row gap-3">
-      {/* Thumbnails */}
+      {/* Thumbnails — only front images (one per color) */}
       {images.length > 1 && (
         <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-y-auto sm:max-h-[600px] scrollbar-hide">
           {images.map((img, i) => (
             <button
               key={img.url}
-              onClick={() => handleThumbnailClick(i)}
+              onClick={() => { setActiveIndex(i); setIsFlipped(false); }}
               className={`flex-shrink-0 w-16 h-20 relative overflow-hidden bg-[#e8e8e8] border transition-colors ${
-                i === activeIndex || (isFlipped && i === activeIndex + 1)
+                i === activeIndex
                   ? "border-gold"
                   : "border-white/10 hover:border-white/30"
               }`}
@@ -87,7 +78,7 @@ export default function ProductGallery({
       <div className="flex-1 flex flex-col gap-3">
         {/* 3D Flip Card */}
         <div
-          className="aspect-square max-h-[70vh] relative cursor-pointer"
+          className={`aspect-square max-h-[70vh] relative ${backImage ? "cursor-pointer" : ""}`}
           style={{ perspective: "1200px" }}
           onClick={handleFlip}
         >
@@ -123,8 +114,8 @@ export default function ProductGallery({
                 }}
               >
                 <Image
-                  src={backImage.url}
-                  alt={backImage.altText || "Product back"}
+                  src={backImage}
+                  alt="Product back"
                   fill
                   className="object-contain"
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -136,7 +127,7 @@ export default function ProductGallery({
           {/* Flip indicator */}
           {backImage && (
             <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white/70 text-[10px] font-body tracking-wider uppercase px-3 py-1.5 rounded-full pointer-events-none">
-              {isFlipped ? "Front" : "Back"} →
+              {isFlipped ? "← Front" : "Back →"}
             </div>
           )}
         </div>
@@ -145,14 +136,10 @@ export default function ProductGallery({
         {backImage && (
           <button
             onClick={handleFlip}
-            className={`w-20 h-24 relative overflow-hidden bg-[#e8e8e8] border transition-all ${
-              isFlipped
-                ? "border-white/10 hover:border-white/30"
-                : "border-white/10 hover:border-gold/50"
-            }`}
+            className="w-20 h-24 relative overflow-hidden bg-[#e8e8e8] border border-white/10 hover:border-gold/50 transition-all"
           >
             <Image
-              src={isFlipped ? frontImage.url : backImage.url}
+              src={isFlipped ? frontImage.url : backImage}
               alt={isFlipped ? "View front" : "View back"}
               fill
               className="object-cover"
