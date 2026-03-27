@@ -19,6 +19,15 @@ const placeholderProducts = [
   { id: "6", title: "Jesus Rules Hat", handle: "jesus-rules-hat", price: "30.00", image: "/images/crown-logo.png" },
 ];
 
+/** Fisher-Yates shuffle — mutates array in place */
+function shuffle<T>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 export default async function ShopPage() {
   const shopifyProducts = await getProducts(20);
   const variants = await getProductVariants();
@@ -35,14 +44,17 @@ export default async function ShopPage() {
     variantsByProduct.find((p) => p.handle === v.product.handle)!.variants.push(v);
   }
 
-  // Build marquee items — every color variant with its own image
+  // Randomize product order — reshuffles each revalidation cycle
+  shuffle(variantsByProduct);
+
+  // Build marquee items — every color variant with its own image (shuffled)
   const marqueeItems = variants.length > 0
-    ? variants.map((v) => ({
+    ? shuffle(variants.map((v) => ({
         id: v.id,
         title: `${v.product.title} — ${v.title}`,
         image: v.image?.url || "/images/logo-white.png",
         href: `/shop/${v.product.handle}`,
-      }))
+      })))
     : placeholderProducts.map((p) => ({
         id: p.id,
         title: p.title,
