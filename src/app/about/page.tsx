@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import PageHero from "@/components/PageHero";
 
 export const metadata: Metadata = {
   title: "About",
@@ -11,11 +10,62 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div>
-      <PageHero
-        image="/images/editorial/beach-walk.jpg"
-        label="Our Story"
-        title="About the Ministry"
-      />
+      {/* Hero with overlapping interview videos */}
+      <section className="relative h-[70vh] min-h-[500px] flex items-end pb-0">
+        <Image
+          src="/images/editorial/beach-walk.jpg"
+          alt="About the Ministry"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-8 sm:px-12 lg:px-10 pb-0">
+          <p className="text-[12px] sm:text-[13px] font-body font-semibold text-gold-light tracking-[0.25em] uppercase mb-5">
+            Our Story
+          </p>
+          <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl text-white tracking-tight mb-10">
+            About the Ministry
+          </h1>
+
+          {/* Interview videos — overlap into content section below */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 translate-y-1/2">
+            <div className="relative">
+              <div className="aspect-video overflow-hidden shadow-2xl border border-white/10">
+                <video
+                  controls
+                  preload="metadata"
+                  poster="/images/posters/diego-interview-poster.jpg"
+                  className="w-full h-full object-cover"
+                >
+                  <source src="/videos/diego-interview.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <p className="mt-3 text-center text-[11px] font-body font-semibold text-white/60 tracking-[0.2em] uppercase">
+                Diego Perez
+              </p>
+            </div>
+            <div className="relative">
+              <div className="aspect-video overflow-hidden shadow-2xl border border-white/10">
+                <video
+                  controls
+                  preload="metadata"
+                  poster="/images/posters/michael-interview-poster.jpg"
+                  className="w-full h-full object-cover"
+                >
+                  <source src="/videos/michael-interview.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <p className="mt-3 text-center text-[11px] font-body font-semibold text-white/60 tracking-[0.2em] uppercase">
+                Michael Clark
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Spacer for the overlapping videos */}
+      <div className="h-[60vw] sm:h-[16vh] bg-background" />
 
       {/* Mission & Story */}
       <section className="pb-20 sm:pb-28 bg-background">
@@ -155,21 +205,6 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="mt-16">
-            <p className="text-[11px] font-body font-semibold text-gold tracking-[0.25em] uppercase mb-4">
-              In His Words
-            </p>
-            <div className="aspect-video relative overflow-hidden bg-black/10">
-              <video
-                controls
-                preload="metadata"
-                poster="/images/posters/diego-interview-poster.jpg"
-                className="w-full h-full object-cover"
-              >
-                <source src="/videos/diego-interview.mp4" type="video/mp4" />
-              </video>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -221,21 +256,6 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="mt-16">
-            <p className="text-[11px] font-body font-semibold text-gold tracking-[0.25em] uppercase mb-4">
-              In His Words
-            </p>
-            <div className="aspect-video relative overflow-hidden bg-white/5">
-              <video
-                controls
-                preload="metadata"
-                poster="/images/posters/michael-interview-poster.jpg"
-                className="w-full h-full object-cover"
-              >
-                <source src="/videos/michael-interview.mp4" type="video/mp4" />
-              </video>
-            </div>
-          </div>
         </div>
       </section>
 
