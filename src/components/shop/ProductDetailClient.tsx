@@ -15,26 +15,6 @@ export default function ProductDetailClient({
   const variants = product.variants.edges.map((e) => e.node);
   const images = product.images.edges.map((e) => e.node);
 
-  // Separate front images (variant-associated) from back images
-  const { frontImages, backImages } = useMemo(() => {
-    const variantImageUrls = new Set<string>();
-    const frontOrder: typeof images = [];
-
-    // Collect unique variant images in order
-    for (const v of variants) {
-      if (v.image?.url && !variantImageUrls.has(v.image.url)) {
-        variantImageUrls.add(v.image.url);
-        const img = images.find((i) => i.url === v.image?.url);
-        if (img) frontOrder.push(img);
-      }
-    }
-
-    // Everything not associated with a variant is a back/extra image
-    const backs = images.filter((img) => !variantImageUrls.has(img.url));
-
-    return { frontImages: frontOrder, backImages: backs };
-  }, [variants, images]);
-
   // Initialize selected options — prefer Large size, then first available variant
   const initialVariant =
     variants.find(
@@ -66,19 +46,6 @@ export default function ProductDetailClient({
     );
   }, [variants, selectedOptions]);
 
-  // Find the back image for the selected variant
-  const selectedFrontBack = useMemo(() => {
-    const frontUrl = selectedVariant?.image?.url;
-    if (!frontUrl) return { front: images[0]?.url, back: null };
-
-    const frontIdx = frontImages.findIndex((img) => img.url === frontUrl);
-    const back = frontIdx !== -1 && frontIdx < backImages.length
-      ? backImages[frontIdx]
-      : null;
-
-    return { front: frontUrl, back: back?.url || null };
-  }, [selectedVariant, frontImages, backImages, images]);
-
   const handleOptionChange = (name: string, value: string) => {
     setSelectedOptions((prev) => ({ ...prev, [name]: value }));
   };
@@ -107,9 +74,8 @@ export default function ProductDetailClient({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
           {/* Left — Gallery */}
           <ProductGallery
-            images={frontImages}
-            selectedImage={selectedFrontBack.front}
-            backImage={selectedFrontBack.back}
+            images={images}
+            selectedImage={selectedVariant?.image?.url}
           />
 
           {/* Right — Product info */}
