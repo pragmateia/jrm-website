@@ -211,7 +211,7 @@ export async function getProductByHandle(
         title
         handle
         descriptionHtml
-        images(first: 20) {
+        images(first: 100) {
           edges {
             node {
               url
