@@ -115,7 +115,7 @@ export default function DonatePage() {
             <video
               controls
               preload="metadata"
-              poster="/images/editorial/diego-michael-walking.jpg"
+              poster="/images/posters/diego-michael-interview-poster.jpg"
               className="w-full h-full object-cover"
             >
               <source src="/videos/diego-michael-interview.mp4" type="video/mp4" />
