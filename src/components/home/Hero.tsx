@@ -1,21 +1,71 @@
+"use client";
+
 import Link from "next/link";
+import { useRef, useEffect, useState } from "react";
 
 export default function Hero() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoaded = () => {
+      if (video.duration) {
+        video.currentTime = Math.random() * video.duration;
+      }
+    };
+
+    const handlePlaying = () => {
+      setVideoReady(true);
+    };
+
+    if (video.readyState >= 1) {
+      handleLoaded();
+    } else {
+      video.addEventListener("loadedmetadata", handleLoaded, { once: true });
+    }
+
+    video.addEventListener("playing", handlePlaying, { once: true });
+
+    const fallback = setTimeout(() => setVideoReady(true), 4000);
+
+    return () => {
+      clearTimeout(fallback);
+      video.removeEventListener("loadedmetadata", handleLoaded);
+      video.removeEventListener("playing", handlePlaying);
+    };
+  }, []);
+
   return (
     <section className="relative h-screen flex items-end overflow-hidden">
-      {/* Background Video */}
+      {/* Fallback image — visible if video fails to load */}
+      <img
+        src="/images/editorial/beach-walk.jpg"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Background Video — sits on top of fallback image */}
       <video
+        ref={videoRef}
         autoPlay
         muted
         loop
         playsInline
-        poster="/images/editorial/beach-walk.jpg"
+        preload="auto"
         className="absolute inset-0 w-full h-full object-cover"
       >
-        <source src="/videos/hero-sermon.mp4" type="video/mp4" />
-        <source src="/videos/hero-cinematic.mp4" type="video/mp4" />
-        <source src="/videos/hero.mp4" type="video/mp4" />
+        <source src="/videos/hero-home.mp4" type="video/mp4" />
       </video>
+
+      {/* Black cover — fades out once video is playing */}
+      <div
+        className={`absolute inset-0 bg-black z-[1] transition-opacity duration-1000 ${
+          videoReady ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      />
 
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30" />
