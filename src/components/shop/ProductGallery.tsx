@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface GalleryImage {
   url: string;
@@ -15,11 +15,15 @@ export default function ProductGallery({
   images: GalleryImage[];
   selectedImage?: string | null;
 }) {
-  const selectedIndex = selectedImage
-    ? images.findIndex((img) => img.url === selectedImage)
-    : -1;
-  const [manualIndex, setManualIndex] = useState(0);
-  const activeIndex = selectedIndex !== -1 ? selectedIndex : manualIndex;
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // When the variant changes (new color/size), jump to that variant's image
+  useEffect(() => {
+    if (selectedImage) {
+      const idx = images.findIndex((img) => img.url === selectedImage);
+      if (idx !== -1) setActiveIndex(idx);
+    }
+  }, [selectedImage, images]);
 
   if (images.length === 0) {
     return (
@@ -37,7 +41,7 @@ export default function ProductGallery({
           {images.map((img, i) => (
             <button
               key={img.url}
-              onClick={() => setManualIndex(i)}
+              onClick={() => setActiveIndex(i)}
               className={`flex-shrink-0 w-16 h-20 relative overflow-hidden bg-[#e8e8e8] border transition-colors ${
                 i === activeIndex
                   ? "border-gold"
