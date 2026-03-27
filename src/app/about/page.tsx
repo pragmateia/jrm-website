@@ -39,7 +39,7 @@ export default function AboutPage() {
                   poster="/images/posters/michael-interview-poster.jpg"
                   className="w-full h-full object-cover"
                 >
-                  <source src="/videos/michael-interview.mp4" type="video/mp4" />
+                  <source src="/videos/michael-interview.mp4#t=3.5" type="video/mp4" />
                 </video>
               </div>
               <div className="mt-3 flex items-center justify-center gap-4">
