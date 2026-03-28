@@ -40,8 +40,8 @@ export default function CartDrawer() {
         onClick={closeCart}
       />
 
-      {/* Drawer */}
-      <div className="fixed inset-y-0 right-0 z-[60] w-full max-w-md bg-[#111] border-l border-white/10 flex flex-col">
+      {/* Drawer — full width on mobile so page content doesn't peek through */}
+      <div className="fixed inset-y-0 right-0 z-[70] w-full sm:max-w-md bg-[#111] sm:border-l border-white/10 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <h2 className="text-sm font-body font-semibold tracking-[0.15em] uppercase text-white">

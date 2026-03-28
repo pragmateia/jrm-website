@@ -103,42 +103,97 @@ export default function ProductDetailClient({
   }, [product.options]);
 
   // Map image URL → color name for thumbnail click → color selection
-  // Includes both front and back images
+  // Uses filename matching first (Printify names contain color + front/back),
+  // falls back to proximity-based matching for images with numeric filenames
   const imageToColor = useMemo(() => {
     const map = new Map<string, string>();
     if (!colorOptionName) return map;
+    // First pass: map all variant front images to their color and indices
+    const frontIndices: { idx: number; color: string }[] = [];
+    const colorSet = new Set<string>();
     for (const v of variants) {
       const color = v.selectedOptions.find(
         (so) => so.name === colorOptionName
       )?.value;
       if (!v.image?.url || !color) continue;
-      // Map front image
+      colorSet.add(color);
       if (!map.has(v.image.url)) {
         map.set(v.image.url, color);
+        const idx = images.findIndex((img) => img.url === v.image!.url);
+        if (idx !== -1) frontIndices.push({ idx, color });
       }
-      // Map back image (next image after front that isn't another variant's front)
-      const frontIdx = images.findIndex((img) => img.url === v.image!.url);
-      if (frontIdx !== -1 && frontIdx + 1 < images.length) {
-        const nextImg = images[frontIdx + 1];
-        if (!variantImageUrls.has(nextImg.url) && !map.has(nextImg.url)) {
-          map.set(nextImg.url, color);
+    }
+    frontIndices.sort((a, b) => a.idx - b.idx);
+    // Second pass: try filename matching for non-variant images
+    const colorsWithBack = new Set<string>();
+    const stillUnassigned: { i: number; url: string }[] = [];
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      if (map.has(img.url) || variantImageUrls.has(img.url)) continue;
+      // Extract filename and check for color name + "back"
+      const filename = img.url.split("/").pop()?.split("?")[0]?.toLowerCase() ?? "";
+      let matched = false;
+      if (filename.includes("back")) {
+        for (const color of colorSet) {
+          const slug = color.toLowerCase().replace(/\s+/g, "-");
+          if (filename.includes(slug) && !colorsWithBack.has(color)) {
+            map.set(img.url, color);
+            colorsWithBack.add(color);
+            matched = true;
+            break;
+          }
         }
+      }
+      if (!matched) stillUnassigned.push({ i, url: img.url });
+    }
+    // Third pass: proximity fallback for remaining unassigned images
+    const withDist = stillUnassigned.map((u) => {
+      let bestDist = Infinity;
+      let bestColor = "";
+      for (const f of frontIndices) {
+        const d = Math.abs(u.i - f.idx);
+        if (d < bestDist) { bestDist = d; bestColor = f.color; }
+      }
+      return { ...u, bestDist, bestColor };
+    });
+    withDist.sort((a, b) => a.bestDist - b.bestDist);
+    for (const item of withDist) {
+      const sorted = frontIndices
+        .map((f) => ({ ...f, dist: Math.abs(item.i - f.idx) }))
+        .sort((a, b) => a.dist - b.dist);
+      let assigned = false;
+      for (const f of sorted) {
+        if (!colorsWithBack.has(f.color)) {
+          map.set(item.url, f.color);
+          colorsWithBack.add(f.color);
+          assigned = true;
+          break;
+        }
+      }
+      if (!assigned && sorted.length > 0) {
+        map.set(item.url, sorted[0].color);
       }
     }
     return map;
   }, [variants, images, variantImageUrls, colorOptionName]);
 
   // Find the back image for the selected variant's color
+  // Matches by color mapping instead of relying on image array position
   const backImage = useMemo(() => {
     const frontUrl = selectedVariant?.image?.url;
-    if (!frontUrl) return null;
-    const frontIdx = images.findIndex((img) => img.url === frontUrl);
-    if (frontIdx === -1 || frontIdx + 1 >= images.length) return null;
-    const nextImg = images[frontIdx + 1];
-    // Only treat as "back" if it's not another variant's front image
-    if (variantImageUrls.has(nextImg.url)) return null;
-    return nextImg;
-  }, [selectedVariant, images, variantImageUrls]);
+    if (!frontUrl || !colorOptionName) return null;
+    const selectedColor = selectedVariant?.selectedOptions.find(
+      (so) => so.name === colorOptionName
+    )?.value;
+    if (!selectedColor) return null;
+    for (const img of images) {
+      if (img.url === frontUrl) continue;
+      if (variantImageUrls.has(img.url)) continue;
+      if (imageToColor.get(img.url) === selectedColor) return img;
+    }
+    return null;
+  }, [selectedVariant, images, variantImageUrls, imageToColor, colorOptionName]);
+
 
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
@@ -168,6 +223,7 @@ export default function ProductDetailClient({
             images={images}
             selectedImage={selectedVariant?.image?.url}
             backImage={backImage}
+            variantImageUrls={variantImageUrls}
             onImageSelect={(url) => {
               const color = imageToColor.get(url);
               if (color && colorOptionName) handleOptionChange(colorOptionName, color);
