@@ -202,43 +202,6 @@ export default async function ShopPage() {
         </div>
       </section>
 
-      {/* Editorial split — two portrait panels */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 gap-[2px] bg-black">
-        {[
-          {
-            src: "/images/editorial/diego-merch-back.jpg",
-            alt: "Diego in Jesus Rules tee holding volleyball",
-            label: "Competition Tees",
-            heading: "On the Sand",
-          },
-          {
-            src: "/images/editorial/fans-boardwalk.jpg",
-            alt: "Fans wearing Jesus Rules merch at AVP tournament",
-            label: "Supporters",
-            heading: "In the Stands",
-          },
-        ].map((panel) => (
-          <div key={panel.label} className="relative h-[80vh] sm:h-screen overflow-hidden group">
-            <Image
-              src={panel.src}
-              alt={panel.alt}
-              fill
-              className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
-              sizes="(max-width: 640px) 100vw, 50vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 p-8 sm:p-10">
-              <p className="text-[10px] sm:text-[11px] font-body font-semibold text-white/60 tracking-[0.25em] uppercase mb-3">
-                {panel.label}
-              </p>
-              <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-tight">
-                {panel.heading}
-              </h2>
-            </div>
-          </div>
-        ))}
-      </section>
-
       {/* Product Carousel */}
       <section id="products" className="py-20 sm:py-28 bg-background">
         <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-10 mb-12">
@@ -297,6 +260,43 @@ export default async function ShopPage() {
             </a>
           </div>
         )}
+      </section>
+
+      {/* Editorial split — two portrait panels */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-[2px] bg-black">
+        {[
+          {
+            src: "/images/editorial/diego-merch-back.jpg",
+            alt: "Diego in Jesus Rules tee holding volleyball",
+            label: "Competition Tees",
+            heading: "On the Sand",
+          },
+          {
+            src: "/images/editorial/fans-boardwalk.jpg",
+            alt: "Fans wearing Jesus Rules merch at AVP tournament",
+            label: "Supporters",
+            heading: "In the Stands",
+          },
+        ].map((panel) => (
+          <div key={panel.label} className="relative h-[80vh] sm:h-screen overflow-hidden group">
+            <Image
+              src={panel.src}
+              alt={panel.alt}
+              fill
+              className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+              sizes="(max-width: 640px) 100vw, 50vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 p-8 sm:p-10">
+              <p className="text-[10px] sm:text-[11px] font-body font-semibold text-white/60 tracking-[0.25em] uppercase mb-3">
+                {panel.label}
+              </p>
+              <h2 className="font-heading text-2xl sm:text-3xl text-white tracking-tight">
+                {panel.heading}
+              </h2>
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* Full-width editorial banner */}
