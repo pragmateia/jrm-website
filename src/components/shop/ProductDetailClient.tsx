@@ -94,19 +94,39 @@ export default function ProductDetailClient({
     return urls;
   }, [variants]);
 
+  // Find the actual color option name (could be "Color", "Colour", etc.)
+  const colorOptionName = useMemo(() => {
+    const opt = product.options.find(
+      (o) => o.name.toLowerCase() === "color" || o.name.toLowerCase() === "colour"
+    );
+    return opt?.name ?? null;
+  }, [product.options]);
+
   // Map image URL → color name for thumbnail click → color selection
+  // Includes both front and back images
   const imageToColor = useMemo(() => {
     const map = new Map<string, string>();
+    if (!colorOptionName) return map;
     for (const v of variants) {
       const color = v.selectedOptions.find(
-        (so) => so.name.toLowerCase() === "color"
+        (so) => so.name === colorOptionName
       )?.value;
-      if (v.image?.url && color && !map.has(v.image.url)) {
+      if (!v.image?.url || !color) continue;
+      // Map front image
+      if (!map.has(v.image.url)) {
         map.set(v.image.url, color);
+      }
+      // Map back image (next image after front that isn't another variant's front)
+      const frontIdx = images.findIndex((img) => img.url === v.image!.url);
+      if (frontIdx !== -1 && frontIdx + 1 < images.length) {
+        const nextImg = images[frontIdx + 1];
+        if (!variantImageUrls.has(nextImg.url) && !map.has(nextImg.url)) {
+          map.set(nextImg.url, color);
+        }
       }
     }
     return map;
-  }, [variants]);
+  }, [variants, images, variantImageUrls, colorOptionName]);
 
   // Find the back image for the selected variant's color
   const backImage = useMemo(() => {
@@ -150,7 +170,7 @@ export default function ProductDetailClient({
             backImage={backImage}
             onImageSelect={(url) => {
               const color = imageToColor.get(url);
-              if (color) handleOptionChange("Color", color);
+              if (color && colorOptionName) handleOptionChange(colorOptionName, color);
             }}
           />
 
