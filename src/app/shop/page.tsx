@@ -131,8 +131,10 @@ export default async function ShopPage() {
 
   // Build marquee items — front + back image for each color variant (shuffled)
   // Extract color from variant title (e.g. "Navy / L" → "Navy", or just "Navy" if no size)
-  const marqueeItems = variants.length > 0
-    ? shuffle(variants.flatMap((v) => {
+  // Only include curated products in the marquee
+  const curatedVariants = variants.filter((v) => activeHandles.has(v.product.handle));
+  const marqueeItems = curatedVariants.length > 0
+    ? shuffle(curatedVariants.flatMap((v) => {
         const frontUrl = v.image?.url || "/images/logo-white.png";
         const color = v.title.includes(" / ") ? v.title.split(" / ")[0] : v.title;
         const colorParam = `?color=${encodeURIComponent(color)}`;
