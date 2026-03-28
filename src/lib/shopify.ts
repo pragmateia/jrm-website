@@ -99,13 +99,14 @@ export interface ShopifyVariant {
   title: string;
   price: string;
   image: { url: string; altText: string | null } | null;
-  product: { handle: string; title: string };
+  product: { handle: string; title: string; productType: string };
 }
 
 /** Product-level images returned alongside variants for back-image detection */
 export interface ProductImages {
   handle: string;
   title: string;
+  productType: string;
   images: { url: string; altText: string | null }[];
   variantImageUrls: Set<string>;
 }
@@ -121,6 +122,7 @@ export async function getProductVariants(): Promise<{
           node {
             handle
             title
+            productType
             images(first: 100) {
               edges {
                 node {
@@ -175,6 +177,7 @@ export async function getProductVariants(): Promise<{
     productImages.push({
       handle: product.handle,
       title: product.title,
+      productType: product.productType || "",
       images: product.images.edges.map(
         (e: { node: { url: string; altText: string | null } }) => e.node
       ),
@@ -194,7 +197,7 @@ export async function getProductVariants(): Promise<{
         title: v.title,
         price: v.price?.amount || "0",
         image: v.image,
-        product: { handle: product.handle, title: product.title },
+        product: { handle: product.handle, title: product.title, productType: product.productType || "" },
       });
     }
   }

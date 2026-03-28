@@ -4,6 +4,11 @@ import Link from "next/link";
 import { getProducts, getProductVariants } from "@/lib/shopify";
 import type { ProductImages } from "@/lib/shopify";
 import ProductMarquee from "@/components/ProductMarquee";
+import ShopProductGrid, {
+  type ShopProduct,
+  type StyleCardData,
+} from "@/components/shop/ShopProductGrid";
+import { inferCategory, STYLE_CARDS, getActiveHandles } from "@/lib/product-categories";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -35,18 +40,36 @@ export default async function ShopPage() {
   const hasShopify = shopifyProducts.length > 0;
 
   // Group variants by product for the Shop All rows
-  const variantsByProduct: { handle: string; title: string; variants: typeof variants }[] = [];
+  const variantsByProduct: ShopProduct[] = [];
   const seenHandles = new Set<string>();
   for (const v of variants) {
     if (!seenHandles.has(v.product.handle)) {
       seenHandles.add(v.product.handle);
-      variantsByProduct.push({ handle: v.product.handle, title: v.product.title, variants: [] });
+      variantsByProduct.push({
+        handle: v.product.handle,
+        title: v.product.title,
+        category: inferCategory(v.product.productType, v.product.title),
+        variants: [],
+      });
     }
-    variantsByProduct.find((p) => p.handle === v.product.handle)!.variants.push(v);
+    variantsByProduct
+      .find((p) => p.handle === v.product.handle)!
+      .variants.push({
+        id: v.id,
+        title: v.title,
+        price: v.price,
+        image: v.image,
+        productHandle: v.product.handle,
+        productTitle: v.product.title,
+      });
   }
 
+  // Only include products that belong to a defined style card
+  const activeHandles = getActiveHandles();
+  const curatedProducts = variantsByProduct.filter((p) => activeHandles.has(p.handle));
+
   // Randomize product order — reshuffles each revalidation cycle
-  shuffle(variantsByProduct);
+  shuffle(curatedProducts);
 
   // Helper: find the back image for a variant front image using the same
   // logic as ProductDetailClient — the next image in the product's image list
@@ -68,6 +91,43 @@ export default async function ShopPage() {
   for (const pi of productImages) {
     productImagesMap.set(pi.handle, pi);
   }
+
+  // Build style card data — resolve cover images and variant counts from
+  // productImages (which includes ALL products from the API, not just the
+  // L-size-filtered variants).  This ensures style cards always have images
+  // even if their products' variants were filtered out by the size gate.
+  const styleCardData: StyleCardData[] = STYLE_CARDS.map((card) => {
+    let coverImage: string | null = null;
+    let variantCount = 0;
+
+    for (const handle of card.handles) {
+      const pi = productImagesMap.get(handle);
+      if (pi) {
+        // Use the first product-level image as cover (front image of first color)
+        if (!coverImage && pi.images.length > 0) {
+          coverImage = pi.images[0].url;
+        }
+        // Count unique color variants (from the variantsByProduct list if available,
+        // otherwise fall back to variantImageUrls which has one per color+size combo)
+        const product = curatedProducts.find((p) => p.handle === handle);
+        if (product) {
+          variantCount += product.variants.length;
+        } else {
+          // Product exists in Shopify but didn't make it through the L-size filter.
+          // Count unique variant front images as a proxy for colorway count.
+          variantCount += pi.variantImageUrls.size;
+        }
+      }
+    }
+
+    return {
+      label: card.label,
+      subtitle: card.subtitle,
+      handles: card.handles,
+      coverImage,
+      variantCount,
+    };
+  });
 
   // Build marquee items — front + back image for each color variant (shuffled)
   // Extract color from variant title (e.g. "Navy / L" → "Navy", or just "Navy" if no size)
@@ -192,76 +252,35 @@ export default async function ShopPage() {
           </div>
         </div>
 
-        <div className="space-y-12">
-          {hasShopify
-            ? variantsByProduct.map((product) => (
-                <div key={product.handle}>
-                  <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-10 mb-4">
-                    <h3 className="text-sm font-body font-medium text-white/70 tracking-wide">
-                      {product.title}
-                    </h3>
+        {hasShopify ? (
+          <ShopProductGrid products={curatedProducts} styleCards={styleCardData} />
+        ) : (
+          <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-10">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {placeholderProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/shop/${product.handle}`}
+                  className="group"
+                >
+                  <div className="aspect-[3/4] relative bg-white/[0.06] flex items-center justify-center overflow-hidden mb-3">
+                    <Image
+                      src={product.image}
+                      alt={product.title}
+                      width={60}
+                      height={60}
+                      className="opacity-10 group-hover:opacity-15 transition-opacity duration-500"
+                    />
                   </div>
-                  <div className="overflow-x-auto scrollbar-hide">
-                    <div className="flex gap-3 pl-8 sm:pl-12 lg:pl-10 pr-8 pb-2" style={{ minWidth: "max-content" }}>
-                      {product.variants.map((v) => {
-                        const color = v.title.includes(" / ") ? v.title.split(" / ")[0] : v.title;
-                        return (
-                        <Link
-                          key={v.id}
-                          href={`/shop/${v.product.handle}?color=${encodeURIComponent(color)}`}
-                          className="group flex-shrink-0 w-[200px] sm:w-[220px]"
-                        >
-                          <div className="aspect-[3/4] relative bg-white/[0.06] border border-white/[0.06] overflow-hidden mb-2">
-                            {v.image ? (
-                              <Image
-                                src={v.image.url}
-                                alt={v.image.altText || `${v.product.title} — ${v.title}`}
-                                fill
-                                className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                                sizes="160px"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Image src="/images/logo-white.png" alt={v.product.title} width={40} height={40} className="opacity-10" />
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-white/50 line-clamp-1">{v.title}</p>
-                          <p className="text-[11px] text-white/40">${parseFloat(v.price).toFixed(2)}</p>
-                        </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ))
-            : <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-10">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {placeholderProducts.map((product) => (
-                    <Link
-                      key={product.id}
-                      href={`/shop/${product.handle}`}
-                      className="group"
-                    >
-                      <div className="aspect-[3/4] relative bg-white/[0.06] flex items-center justify-center overflow-hidden mb-3">
-                        <Image
-                          src={product.image}
-                          alt={product.title}
-                          width={60}
-                          height={60}
-                          className="opacity-10 group-hover:opacity-15 transition-opacity duration-500"
-                        />
-                      </div>
-                      <h3 className="text-xs font-body font-medium text-white mb-0.5 group-hover:text-gold transition-colors">
-                        {product.title}
-                      </h3>
-                      <p className="text-xs text-white/40">${product.price}</p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-          }
-        </div>
+                  <h3 className="text-xs font-body font-medium text-white mb-0.5 group-hover:text-gold transition-colors">
+                    {product.title}
+                  </h3>
+                  <p className="text-xs text-white/40">${product.price}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!hasShopify && (
           <div className="mt-12 text-center">
