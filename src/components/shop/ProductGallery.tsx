@@ -12,10 +12,12 @@ export default function ProductGallery({
   images,
   selectedImage,
   backImage,
+  onImageSelect,
 }: {
   images: GalleryImage[];
   selectedImage?: string | null;
   backImage?: GalleryImage | null;
+  onImageSelect?: (url: string) => void;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeSide, setActiveSide] = useState<"front" | "back">("front");
@@ -53,6 +55,7 @@ export default function ProductGallery({
               onClick={() => {
                 setActiveIndex(i);
                 setActiveSide("front");
+                onImageSelect?.(img.url);
               }}
               className={`flex-shrink-0 w-16 h-20 relative overflow-hidden bg-[#e8e8e8] border transition-colors ${
                 i === activeIndex && activeSide === "front"

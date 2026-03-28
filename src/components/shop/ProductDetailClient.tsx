@@ -94,6 +94,20 @@ export default function ProductDetailClient({
     return urls;
   }, [variants]);
 
+  // Map image URL → color name for thumbnail click → color selection
+  const imageToColor = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const v of variants) {
+      const color = v.selectedOptions.find(
+        (so) => so.name.toLowerCase() === "color"
+      )?.value;
+      if (v.image?.url && color && !map.has(v.image.url)) {
+        map.set(v.image.url, color);
+      }
+    }
+    return map;
+  }, [variants]);
+
   // Find the back image for the selected variant's color
   const backImage = useMemo(() => {
     const frontUrl = selectedVariant?.image?.url;
@@ -134,6 +148,10 @@ export default function ProductDetailClient({
             images={images}
             selectedImage={selectedVariant?.image?.url}
             backImage={backImage}
+            onImageSelect={(url) => {
+              const color = imageToColor.get(url);
+              if (color) handleOptionChange("Color", color);
+            }}
           />
 
           {/* Right — Product info */}
