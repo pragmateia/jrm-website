@@ -23,8 +23,18 @@ const darkHeroPages = ["/", "/about", "/outreach", "/donate", "/shop"];
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [hasMounted, setHasMounted] = useState(false);
   const pathname = usePathname();
   const { totalQuantity, openCart } = useCart();
+
+  // Force a re-render after hydration. This is critical because:
+  // - SSR/ISR may cache HTML with a stale inline opacity (e.g. opacity: 1)
+  // - React hydration does NOT correct inline style mismatches in production
+  // - setScrollProgress(0) is a no-op when state is already 0
+  // - hasMounted flipping false→true guarantees a re-render with correct values
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   // Stable scroll handler — reads scrollY and updates progress
   const handleScroll = useCallback(() => {
@@ -33,10 +43,9 @@ export default function Navbar() {
   }, []);
 
   // On every route change (and initial mount):
-  // 1. Immediately set progress to 0 so navbar starts transparent on dark-hero pages.
+  // 1. Reset progress to 0 for client-side navigations where scrollY hasn't reset yet.
   // 2. Defer the actual scroll read by two rAF frames to let the browser finish
-  //    scroll-to-top. This prevents the race where scrollY hasn't reset yet during
-  //    client-side navigation, which caused the navbar to flash dark.
+  //    scroll-to-top.
   // 3. Attach the scroll listener for continuous updates.
   useEffect(() => {
     setScrollProgress(0);
@@ -56,7 +65,8 @@ export default function Navbar() {
   }, [pathname, handleScroll]);
 
   const hasDarkHero = darkHeroPages.includes(pathname) || pathname.startsWith("/blog/");
-  const bgOpacity = hasDarkHero ? scrollProgress * 0.97 : 1;
+  // Before mount, always use 0 for dark-hero pages to prevent stale SSR cache showing dark navbar
+  const bgOpacity = hasDarkHero ? (hasMounted ? scrollProgress * 0.97 : 0) : 1;
 
   return (
     <>
