@@ -56,27 +56,61 @@ function TournamentSection({
   tournaments: Tournament[];
 }) {
   return (
-    <div className="mb-14">
-      <p className="text-[11px] font-body font-semibold text-gold tracking-[0.25em] uppercase mb-3">
-        {label}
-      </p>
-      <h2 className="font-heading text-2xl sm:text-3xl text-text-primary mb-8 tracking-tight">
-        {title}
-      </h2>
-      <div className="divide-y divide-white/5">
+    <div className="mb-12">
+      <div className="border-l-2 border-gold/40 pl-5 mb-6">
+        <p className="text-[11px] font-body font-semibold text-gold tracking-[0.25em] uppercase mb-1.5">
+          {label}
+        </p>
+        <h2 className="font-heading text-2xl sm:text-3xl text-text-primary tracking-tight">
+          {title}
+        </h2>
+      </div>
+      <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+        {/* Column headers */}
+        <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 bg-white/[0.03] border-b border-white/[0.06]">
+          <div className="col-span-5">
+            <span className="text-[10px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
+              Event
+            </span>
+          </div>
+          <div className="col-span-3">
+            <span className="text-[10px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
+              Dates
+            </span>
+          </div>
+          <div className="col-span-4">
+            <span className="text-[10px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
+              Location
+            </span>
+          </div>
+        </div>
         {tournaments.map((t, i) => (
           <div
             key={i}
-            className="grid grid-cols-12 gap-4 py-5 items-baseline"
+            className={`px-5 py-4 transition-colors hover:bg-white/[0.04] ${
+              i !== tournaments.length - 1 ? "border-b border-white/[0.05]" : ""
+            }`}
           >
-            <div className="col-span-5 sm:col-span-5">
-              <span className="text-text-primary text-sm font-medium">{t.name}</span>
+            {/* Desktop */}
+            <div className="hidden sm:grid grid-cols-12 gap-4 items-baseline">
+              <div className="col-span-5">
+                <span className="text-text-primary text-sm font-medium">{t.name}</span>
+              </div>
+              <div className="col-span-3">
+                <span className="text-text-secondary text-sm">{t.dates}</span>
+              </div>
+              <div className="col-span-4">
+                <span className="text-text-secondary text-sm">{t.location}</span>
+              </div>
             </div>
-            <div className="col-span-3 sm:col-span-3">
-              <span className="text-text-secondary text-sm">{t.dates}</span>
-            </div>
-            <div className="col-span-4 sm:col-span-4">
-              <span className="text-text-secondary text-sm">{t.location}</span>
+            {/* Mobile */}
+            <div className="sm:hidden">
+              <p className="text-text-primary text-sm font-medium mb-1.5">{t.name}</p>
+              <div className="flex items-center gap-3 text-text-secondary text-xs">
+                <span>{t.dates}</span>
+                <span className="text-white/20">·</span>
+                <span>{t.location}</span>
+              </div>
             </div>
           </div>
         ))}
@@ -97,26 +131,7 @@ export default function SchedulePage() {
 
       {/* Schedule */}
       <section className="pb-20 sm:pb-28 bg-cream">
-        <div className="max-w-3xl mx-auto px-8 sm:px-12 lg:px-10 pt-20">
-          {/* Column headers */}
-          <div className="grid grid-cols-12 gap-4 pb-4 border-b border-white/10 mb-8">
-            <div className="col-span-5">
-              <span className="text-[11px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
-                Event
-              </span>
-            </div>
-            <div className="col-span-3">
-              <span className="text-[11px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
-                Dates
-              </span>
-            </div>
-            <div className="col-span-4">
-              <span className="text-[11px] font-body font-semibold text-text-muted tracking-[0.15em] uppercase">
-                Location
-              </span>
-            </div>
-          </div>
-
+        <div className="max-w-3xl mx-auto px-6 sm:px-12 lg:px-10 pt-16 sm:pt-20">
           <TournamentSection
             label="Contender Series"
             title="Heritage Contender Events"
@@ -138,7 +153,7 @@ export default function SchedulePage() {
             tournaments={otherEvents}
           />
 
-          <div className="mt-4 pt-8 border-t border-white/5">
+          <div className="mt-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-5 py-4">
             <p className="text-text-muted text-xs leading-relaxed">
               FIVB Beach Pro Tour international events will be added as confirmed.
               Schedule subject to change. Follow{" "}

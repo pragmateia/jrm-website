@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import CartDrawer from "@/components/cart/CartDrawer";
@@ -20,62 +20,131 @@ const navLinks = [
 // Pages that have a dark hero image behind the navbar
 const darkHeroPages = ["/", "/about", "/outreach", "/donate", "/shop"];
 
+function isDarkHeroPage(path: string) {
+  return darkHeroPages.includes(path) || path.startsWith("/blog/");
+}
+
+// Suppress useLayoutEffect SSR warning — we only use it for client-side nav
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [hasMounted, setHasMounted] = useState(false);
   const pathname = usePathname();
   const { totalQuantity, openCart } = useCart();
+  const navRef = useRef<HTMLElement>(null);
 
-  // Force a re-render after hydration. This is critical because:
-  // - SSR/ISR may cache HTML with a stale inline opacity (e.g. opacity: 1)
-  // - React hydration does NOT correct inline style mismatches in production
-  // - setScrollProgress(0) is a no-op when state is already 0
-  // - hasMounted flipping false→true guarantees a re-render with correct values
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
+  // ------------------------------------------------------------------
+  // WHY THIS APPROACH (and why previous fixes didn't stick):
+  //
+  // The navbar needs to be transparent on dark-hero pages and opaque on
+  // others, transitioning to dark on scroll. Every previous attempt used
+  // React state (scrollProgress) to compute an inline backgroundColor
+  // during render. This breaks in two ways:
+  //
+  // 1. CLIENT-SIDE NAVIGATION FLASH: When navigating from a non-dark-hero
+  //    page (scrollProgress=1) to a dark-hero page, React renders ONE FRAME
+  //    with the old scrollProgress before the pathname-change effect can
+  //    reset it. That frame shows a dark navbar on a dark-hero page.
+  //
+  // 2. SSR/ISR STALE CACHE: React hydration does not correct inline style
+  //    mismatches in production. If ISR serves stale HTML with a non-zero
+  //    opacity, the user sees a dark navbar until useEffect fires.
+  //
+  // THE FIX: Update the nav element's styles IMPERATIVELY via a DOM ref,
+  // bypassing React's render cycle entirely. Specifically:
+  //
+  // - useLayoutEffect (runs BEFORE browser paint) resets the navbar to
+  //   transparent on every pathname change. No stale-state flash possible.
+  //
+  // - The scroll handler updates styles directly on the DOM element,
+  //   not through React state. Zero render-cycle lag.
+  //
+  // - SSR still outputs the correct initial inline style (transparent for
+  //   dark-hero pages, opaque for others) as a fallback before JS runs.
+  //
+  // - A CSS transition is NOT used on the background-color so that the
+  //   transparent→dark→transparent resets are instant (no fade artifacts).
+  //   The scroll-linked opacity change is already smooth because scroll
+  //   events fire at ~60fps.
+  // ------------------------------------------------------------------
 
-  // Stable scroll handler — reads scrollY and updates progress
-  const handleScroll = useCallback(() => {
-    const progress = Math.min(window.scrollY / 150, 1);
-    setScrollProgress(progress);
-  }, []);
+  // Imperatively apply navbar background based on scroll progress.
+  // Called directly from scroll handler and layout effects — never
+  // goes through React state for the visual update.
+  const applyNavStyles = useCallback(
+    (el: HTMLElement, progress: number, darkHero: boolean) => {
+      const opacity = darkHero ? progress * 0.97 : 1;
+      el.style.backgroundColor = `rgba(26, 26, 26, ${opacity})`;
+      if (progress > 0.1) {
+        const blur = `blur(${progress * 8}px)`;
+        el.style.backdropFilter = blur;
+        el.style.setProperty("-webkit-backdrop-filter", blur);
+      } else {
+        el.style.backdropFilter = "none";
+        el.style.setProperty("-webkit-backdrop-filter", "none");
+      }
+    },
+    [],
+  );
 
-  // On every route change (and initial mount):
-  // 1. Reset progress to 0 for client-side navigations where scrollY hasn't reset yet.
-  // 2. Defer the actual scroll read by two rAF frames to let the browser finish
-  //    scroll-to-top.
-  // 3. Attach the scroll listener for continuous updates.
-  useEffect(() => {
-    setScrollProgress(0);
+  // On pathname change: immediately reset navbar to the correct initial
+  // state BEFORE the browser paints. useLayoutEffect is critical here —
+  // useEffect runs AFTER paint, which is exactly the one-frame flash
+  // that plagued every previous fix.
+  useIsomorphicLayoutEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
 
+    const darkHero = isDarkHeroPage(pathname);
+
+    // Instant reset — transparent for dark-hero pages, opaque for others.
+    // Because this is useLayoutEffect, the browser has not painted yet,
+    // so there is zero visual flash regardless of previous scroll state.
+    applyNavStyles(el, 0, darkHero);
+
+    // After the browser finishes its scroll-to-top for the new page,
+    // read the actual scroll position and apply it. Double-rAF ensures
+    // the scroll reset from Next.js navigation has taken effect.
     let cancelled = false;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (!cancelled) handleScroll();
+        if (cancelled || !navRef.current) return;
+        const progress = Math.min(window.scrollY / 150, 1);
+        applyNavStyles(navRef.current, progress, darkHero);
       });
     });
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Scroll listener — updates styles directly on the DOM element,
+    // never through React state. This means zero render-cycle lag.
+    const onScroll = () => {
+      if (!navRef.current) return;
+      const progress = Math.min(window.scrollY / 150, 1);
+      applyNavStyles(navRef.current, progress, darkHero);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       cancelled = true;
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", onScroll);
     };
-  }, [pathname, handleScroll]);
+  }, [pathname, applyNavStyles]);
 
-  const hasDarkHero = darkHeroPages.includes(pathname) || pathname.startsWith("/blog/");
-  // Before mount, always use 0 for dark-hero pages to prevent stale SSR cache showing dark navbar
-  const bgOpacity = hasDarkHero ? (hasMounted ? scrollProgress * 0.97 : 0) : 1;
+  // Compute initial inline style for SSR. This is the ONLY time React
+  // controls the background — after hydration, the layout effect takes
+  // over and all further updates are imperative via the ref.
+  const hasDarkHero = isDarkHeroPage(pathname);
+  const ssrBgOpacity = hasDarkHero ? 0 : 1;
 
   return (
     <>
       <nav
+        ref={navRef}
         className="fixed top-0 left-0 right-0 z-50"
         style={{
-          backgroundColor: `rgba(26, 26, 26, ${bgOpacity})`,
-          backdropFilter: scrollProgress > 0.1 ? `blur(${scrollProgress * 8}px)` : "none",
-          WebkitBackdropFilter: scrollProgress > 0.1 ? `blur(${scrollProgress * 8}px)` : "none",
+          backgroundColor: `rgba(26, 26, 26, ${ssrBgOpacity})`,
+          backdropFilter: "none",
+          WebkitBackdropFilter: "none",
         }}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
