@@ -3,23 +3,43 @@
 import Link from "next/link";
 import { useRef, useEffect, useState } from "react";
 
+const HERO_PARTS = [
+  "/videos/hero-part1.mp4",
+  "/videos/hero-part2.mp4",
+  "/videos/hero-part3.mp4",
+  "/videos/hero-part4.mp4",
+  "/videos/hero-part5.mp4",
+];
+
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const preloaderRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const playingRef = useRef(false);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    const preloader = preloaderRef.current;
+    if (!video || !preloader) return;
 
     let cancelled = false;
 
-    const startPlayback = () => {
+    // --- Random start part (client-only) ---
+    const startIdx = Math.floor(Math.random() * HERO_PARTS.length);
+    let currentIdx = startIdx;
+
+    // Change src before first play if not part1.
+    // iOS allows muted+playsinline videos to autoplay even with
+    // programmatic src — the previous failures were from other bugs.
+    if (startIdx !== 0) {
+      video.src = HERO_PARTS[startIdx];
+    }
+
+    // --- Autoplay ---
+    const tryPlay = () => {
       if (cancelled) return;
-      video.play().then(() => {
-        // Autoplay worked
-      }).catch(() => {
+      video.play().then(() => {}).catch(() => {
         if (!cancelled) {
           setAutoplayBlocked(true);
           setVideoReady(true);
@@ -28,20 +48,70 @@ export default function Hero() {
     };
 
     if (video.readyState >= 3) {
-      startPlayback();
+      tryPlay();
     } else {
-      video.addEventListener("canplay", startPlayback, { once: true });
+      video.addEventListener("canplay", tryPlay, { once: true });
     }
 
-    const handlePlaying = () => {
-      if (!cancelled) {
-        playingRef.current = true;
-        setVideoReady(true);
+    // --- First play → reveal video, start preloading next ---
+    const onPlaying = () => {
+      if (cancelled) return;
+      playingRef.current = true;
+      setVideoReady(true);
+      loadNext();
+    };
+    video.addEventListener("playing", onPlaying, { once: true });
+
+    // --- Preloader: always loads the next part in sequence ---
+    let nextReady = false;
+
+    const loadNext = () => {
+      nextReady = false;
+      const nextIdx = (currentIdx + 1) % HERO_PARTS.length;
+      preloader.src = HERO_PARTS[nextIdx];
+      preloader.load();
+
+      const onLoaded = () => {
+        if (!cancelled) nextReady = true;
+      };
+      if (preloader.readyState >= 4) {
+        onLoaded();
+      } else {
+        preloader.addEventListener("canplaythrough", onLoaded, { once: true });
       }
     };
-    video.addEventListener("playing", handlePlaying, { once: true });
 
-    // Fallback: if nothing happens after 5s, show the fallback image
+    // --- Part transition on ended ---
+    const onEnded = () => {
+      if (cancelled) return;
+
+      if (nextReady) {
+        // Swap to preloaded part
+        const prevIdx = currentIdx;
+        const prevSrc = video.src;
+        currentIdx = (currentIdx + 1) % HERO_PARTS.length;
+        video.src = HERO_PARTS[currentIdx];
+
+        video.play().then(() => {
+          // Success — preload the one after this
+          loadNext();
+        }).catch(() => {
+          // Swap failed — restore previous part and replay it
+          currentIdx = prevIdx;
+          video.src = prevSrc;
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        });
+      } else {
+        // Next not ready — replay current part from beginning
+        video.currentTime = 0;
+        video.play().catch(() => {});
+      }
+    };
+
+    video.addEventListener("ended", onEnded);
+
+    // --- Fallback: show image if nothing plays within 5s ---
     const fallback = setTimeout(() => {
       if (!cancelled && !playingRef.current) {
         setAutoplayBlocked(true);
@@ -52,12 +122,15 @@ export default function Hero() {
     return () => {
       cancelled = true;
       clearTimeout(fallback);
-      video.removeEventListener("playing", handlePlaying);
-      video.removeEventListener("canplay", startPlayback);
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("ended", onEnded);
+      video.removeEventListener("canplay", tryPlay);
       video.pause();
+      preloader.pause();
     };
   }, []);
 
+  // Tap-to-play if autoplay was blocked
   const handleTap = () => {
     if (!autoplayBlocked) return;
     const video = videoRef.current;
@@ -79,19 +152,27 @@ export default function Hero() {
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Single looping video — no multi-part swaps that break iOS */}
+      {/* Main video */}
       <video
         ref={videoRef}
-        src="/videos/hero-part1.mp4"
+        src={HERO_PARTS[0]}
         autoPlay
-        loop
         muted
         playsInline
         preload="auto"
         className={`absolute inset-0 w-full h-full object-cover ${autoplayBlocked ? "invisible" : ""}`}
       />
 
-      {/* Black cover — fades out once video is playing or fallback shows */}
+      {/* Hidden preloader for next part */}
+      <video
+        ref={preloaderRef}
+        muted
+        playsInline
+        preload="auto"
+        className="hidden"
+      />
+
+      {/* Black cover — fades out once video plays or fallback shows */}
       <div
         className={`absolute inset-0 bg-black z-[1] transition-opacity duration-1000 ${
           videoReady ? "opacity-0 pointer-events-none" : "opacity-100"
