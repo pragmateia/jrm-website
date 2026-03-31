@@ -22,6 +22,9 @@ export default function Hero() {
     const nextVideo = nextVideoRef.current;
     if (!video || !nextVideo) return;
 
+    let cancelled = false;
+    let rafId: number | null = null;
+
     // Pick a random part to start with
     const startPart = Math.floor(Math.random() * HERO_PARTS.length);
     partIndex.current = startPart;
@@ -30,6 +33,7 @@ export default function Hero() {
 
     // Random seek within first 70% so there's buffer time to preload next part
     const handleLoaded = () => {
+      if (cancelled) return;
       if (video.duration) {
         video.currentTime = Math.random() * video.duration * 0.7;
       }
@@ -41,7 +45,9 @@ export default function Hero() {
       video.addEventListener("loadedmetadata", handleLoaded, { once: true });
     }
 
-    const handlePlaying = () => setVideoReady(true);
+    const handlePlaying = () => {
+      if (!cancelled) setVideoReady(true);
+    };
     video.addEventListener("playing", handlePlaying, { once: true });
 
     // Preload the next part
@@ -49,29 +55,10 @@ export default function Hero() {
     nextVideo.src = HERO_PARTS[nextPart];
     nextVideo.load();
 
-    const handleEnded = () => {
-      // If next part isn't ready, loop current part until it is
-      if (nextVideo.readyState < 3) {
-        video.currentTime = 0;
-        video.play().catch(() => {});
-        const checkReady = () => {
-          if (nextVideo.readyState >= 3) {
-            video.pause();
-            swapToNext();
-          } else {
-            requestAnimationFrame(checkReady);
-          }
-        };
-        requestAnimationFrame(checkReady);
-        return;
-      }
-      swapToNext();
-    };
-
     const swapToNext = () => {
+      if (cancelled) return;
       partIndex.current = (partIndex.current + 1) % HERO_PARTS.length;
-      const currentPart = partIndex.current;
-      const upcomingPart = (currentPart + 1) % HERO_PARTS.length;
+      const upcomingPart = (partIndex.current + 1) % HERO_PARTS.length;
 
       video.src = nextVideo.src;
       video.load();
@@ -81,14 +68,46 @@ export default function Hero() {
       nextVideo.load();
     };
 
+    const handleEnded = () => {
+      if (cancelled) return;
+      // If next part isn't ready, loop current part until it is
+      if (nextVideo.readyState < 3) {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+        const checkReady = () => {
+          if (cancelled) return;
+          if (nextVideo.readyState >= 3) {
+            video.pause();
+            swapToNext();
+          } else {
+            rafId = requestAnimationFrame(checkReady);
+          }
+        };
+        rafId = requestAnimationFrame(checkReady);
+        return;
+      }
+      swapToNext();
+    };
+
     video.addEventListener("ended", handleEnded);
 
-    const fallback = setTimeout(() => setVideoReady(true), 4000);
+    const fallback = setTimeout(() => {
+      if (!cancelled) setVideoReady(true);
+    }, 4000);
 
     return () => {
+      cancelled = true;
       clearTimeout(fallback);
+      if (rafId !== null) cancelAnimationFrame(rafId);
       video.removeEventListener("playing", handlePlaying);
       video.removeEventListener("ended", handleEnded);
+      video.removeEventListener("loadedmetadata", handleLoaded);
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      nextVideo.pause();
+      nextVideo.removeAttribute("src");
+      nextVideo.load();
     };
   }, []);
 
