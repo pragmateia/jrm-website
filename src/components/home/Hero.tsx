@@ -6,6 +6,7 @@ import { useRef, useEffect, useState } from "react";
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -29,6 +30,16 @@ export default function Hero() {
 
     video.addEventListener("playing", handlePlaying, { once: true });
 
+    // Detect autoplay failure (iOS Low Power Mode, etc.)
+    // When autoplay is blocked, hide the video to prevent the native play button overlay
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        setAutoplayBlocked(true);
+        setVideoReady(true); // Reveal the fallback image
+      });
+    }
+
     const fallback = setTimeout(() => setVideoReady(true), 4000);
 
     return () => {
@@ -47,7 +58,9 @@ export default function Hero() {
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Background Video — sits on top of fallback image */}
+      {/* Background Video — sits on top of fallback image.
+          Hidden when autoplay is blocked (iOS Low Power Mode) to prevent
+          the native play button overlay from appearing. */}
       <video
         ref={videoRef}
         autoPlay
@@ -55,7 +68,9 @@ export default function Hero() {
         loop
         playsInline
         preload="auto"
-        className="absolute inset-0 w-full h-full object-cover"
+        className={`absolute inset-0 w-full h-full object-cover ${
+          autoplayBlocked ? "hidden" : ""
+        }`}
       >
         <source src="/videos/hero-home.mp4" type="video/mp4" />
       </video>
