@@ -53,10 +53,19 @@ export default function Hero() {
       video.addEventListener("canplay", tryPlay, { once: true });
     }
 
-    // --- First play → reveal video, start preloading next ---
+    // Seek to a random spot in the first 25% of the video.
+    // Must be called AFTER play() succeeds — seeking before play breaks iOS.
+    const seekNearStart = () => {
+      if (video.duration && isFinite(video.duration)) {
+        video.currentTime = Math.random() * video.duration * 0.25;
+      }
+    };
+
+    // --- First play → seek, reveal video, start preloading next ---
     const onPlaying = () => {
       if (cancelled) return;
       playingRef.current = true;
+      seekNearStart();
       setVideoReady(true);
       loadNext();
     };
@@ -93,7 +102,8 @@ export default function Hero() {
         video.src = HERO_PARTS[currentIdx];
 
         video.play().then(() => {
-          // Success — preload the one after this
+          // Success — seek near start, then preload next
+          seekNearStart();
           loadNext();
         }).catch(() => {
           // Swap failed — restore previous part and replay it
