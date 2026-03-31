@@ -167,3 +167,11 @@ h1, h2, h3, h4, h5, h6 {
 .dark-section .prose-jrm h3 {
   color: #ffffff;
 }
+
+/* Hide iOS Safari default video play button */
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-panel,
+video::-webkit-media-controls {
+  display: none !important;
+  -webkit-appearance: none;
+}

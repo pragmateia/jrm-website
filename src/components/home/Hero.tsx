@@ -33,6 +33,7 @@ export default function Hero() {
       if (video.duration) {
         video.currentTime = Math.random() * video.duration * 0.7;
       }
+      video.play().catch(() => {});
     };
     if (video.readyState >= 1) {
       handleLoaded();
