@@ -57,7 +57,7 @@ export default function Hero() {
     // Must be called AFTER play() succeeds — seeking before play breaks iOS.
     const seekNearStart = () => {
       if (video.duration && isFinite(video.duration)) {
-        video.currentTime = Math.random() * video.duration * 0.25;
+        video.currentTime = Math.random() * video.duration * 0.4;
       }
     };
 
