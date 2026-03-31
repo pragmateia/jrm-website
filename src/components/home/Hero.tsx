@@ -3,227 +3,75 @@
 import Link from "next/link";
 import { useRef, useEffect, useState } from "react";
 
-const HERO_PARTS = [
-  "/videos/hero-part1.mp4",
-  "/videos/hero-part2.mp4",
-  "/videos/hero-part3.mp4",
-  "/videos/hero-part4.mp4",
-  "/videos/hero-part5.mp4",
-  "/videos/hero-part6.mp4",
-  "/videos/hero-part7.mp4",
-];
-
 export default function Hero() {
-  const videoARef = useRef<HTMLVideoElement>(null);
-  const videoBRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
-  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
-  const playingRef = useRef(false);
 
   useEffect(() => {
-    const videoA = videoARef.current;
-    const videoB = videoBRef.current;
-    if (!videoA || !videoB) return;
+    const video = videoRef.current;
+    if (!video) return;
 
-    let cancelled = false;
-    let active: HTMLVideoElement = videoA;
-    let standby: HTMLVideoElement = videoB;
-    let nextReady = false;
-
-    // Set initial z-index (active in front)
-    active.style.zIndex = "1";
-    standby.style.zIndex = "0";
-
-    // --- Random start part (client-only) ---
-    const startIdx = Math.floor(Math.random() * HERO_PARTS.length);
-    let currentIdx = startIdx;
-    active.src = HERO_PARTS[startIdx];
-
-    // --- Autoplay ---
-    const tryPlay = () => {
-      if (cancelled) return;
-      active.play().then(() => {}).catch(() => {
-        if (!cancelled) {
-          setAutoplayBlocked(true);
-          setVideoReady(true);
-        }
-      });
+    const handleLoaded = () => {
+      if (video.duration) {
+        video.currentTime = Math.random() * video.duration;
+      }
     };
 
-    if (active.readyState >= 3) {
-      tryPlay();
+    const handlePlaying = () => {
+      setVideoReady(true);
+    };
+
+    if (video.readyState >= 1) {
+      handleLoaded();
     } else {
-      active.addEventListener("canplay", tryPlay, { once: true });
+      video.addEventListener("loadedmetadata", handleLoaded, { once: true });
     }
 
-    // --- First play → reveal video, start preloading next ---
-    const onFirstPlaying = () => {
-      if (cancelled) return;
-      playingRef.current = true;
-      setVideoReady(true);
-      loadNext();
-    };
-    active.addEventListener("playing", onFirstPlaying, { once: true });
+    video.addEventListener("playing", handlePlaying, { once: true });
 
-    // --- Preload the next part into the standby buffer ---
-    const loadNext = () => {
-      nextReady = false;
-      const nextIdx = (currentIdx + 1) % HERO_PARTS.length;
-      standby.src = HERO_PARTS[nextIdx];
-      standby.load();
-
-      const onLoaded = () => {
-        if (!cancelled) nextReady = true;
-      };
-      if (standby.readyState >= 4) {
-        onLoaded();
-      } else {
-        standby.addEventListener("canplaythrough", onLoaded, { once: true });
-      }
-    };
-
-    // --- Part transition: swap BEFORE the active video ends ---
-    // The ended event fires after iOS clears the frame. Instead, use
-    // timeupdate to detect when we're near the end and swap while the
-    // active video is still showing its last frames.
-    let swapped = false;
-
-    const doSwap = () => {
-      if (cancelled || swapped || !nextReady) return false;
-      swapped = true;
-      active.removeEventListener("timeupdate", onTimeUpdate);
-
-      // Bring standby to front while active still has visible frames
-      standby.style.zIndex = "1";
-      active.style.zIndex = "0";
-
-      standby.play().then(() => {
-        // Swap roles
-        const prevActive = active;
-        active = standby;
-        standby = prevActive;
-        currentIdx = (currentIdx + 1) % HERO_PARTS.length;
-        swapped = false;
-
-        // Listen for the next transition
-        active.addEventListener("timeupdate", onTimeUpdate);
-        active.addEventListener("ended", onEnded, { once: true });
-
-        loadNext();
-      }).catch(() => {
-        // Revert
-        standby.style.zIndex = "0";
-        active.style.zIndex = "1";
-        swapped = false;
-        active.addEventListener("timeupdate", onTimeUpdate);
-        active.addEventListener("ended", onEnded, { once: true });
-      });
-
-      return true;
-    };
-
-    // Fire every ~250ms — swap when within 0.3s of end
-    const onTimeUpdate = () => {
-      if (cancelled || swapped || !nextReady) return;
-      const remaining = active.duration - active.currentTime;
-      if (!isNaN(remaining) && remaining <= 0.3) {
-        doSwap();
-      }
-    };
-
-    // Fallback if timeupdate missed the window
-    const onEnded = () => {
-      if (cancelled) return;
-      if (!swapped) {
-        if (!doSwap()) {
-          // Next wasn't ready — replay current part
-          active.currentTime = 0;
-          active.addEventListener("ended", onEnded, { once: true });
-          active.play().catch(() => {});
-        }
-      }
-    };
-
-    active.addEventListener("timeupdate", onTimeUpdate);
-    active.addEventListener("ended", onEnded, { once: true });
-
-    // --- Fallback: show image if nothing plays within 5s ---
-    const fallback = setTimeout(() => {
-      if (!cancelled && !playingRef.current) {
-        setAutoplayBlocked(true);
-        setVideoReady(true);
-      }
-    }, 5000);
+    const fallback = setTimeout(() => setVideoReady(true), 4000);
 
     return () => {
-      cancelled = true;
       clearTimeout(fallback);
-      videoA.removeEventListener("playing", onFirstPlaying);
-      videoA.removeEventListener("canplay", tryPlay);
-      videoA.removeEventListener("timeupdate", onTimeUpdate);
-      videoB.removeEventListener("timeupdate", onTimeUpdate);
-      videoA.pause();
-      videoB.pause();
+      video.removeEventListener("loadedmetadata", handleLoaded);
+      video.removeEventListener("playing", handlePlaying);
     };
   }, []);
 
-  // Tap-to-play if autoplay was blocked
-  const handleTap = () => {
-    if (!autoplayBlocked) return;
-    const video = videoARef.current;
-    if (!video) return;
-    video.play().then(() => {
-      setAutoplayBlocked(false);
-    }).catch(() => {});
-  };
-
   return (
-    <section
-      className="relative min-h-[100dvh] flex items-end overflow-hidden -mt-[env(safe-area-inset-top)] pt-[env(safe-area-inset-top)]"
-      onClick={handleTap}
-    >
-      {/* Fallback image */}
+    <section className="relative h-screen flex items-end overflow-hidden">
+      {/* Fallback image — visible if video fails to load */}
       <img
         src="/images/editorial/beach-walk.jpg"
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Double-buffered video: two elements swap active/standby roles.
-          The standby is fully loaded behind the active, so transitions
-          are seamless — no flash of fallback image. */}
+      {/* Background Video — sits on top of fallback image */}
       <video
-        ref={videoARef}
+        ref={videoRef}
         autoPlay
         muted
+        loop
         playsInline
         preload="auto"
-        className={`absolute inset-0 w-full h-full object-cover ${
-          autoplayBlocked ? "invisible" : ""
-        }`}
-      />
-      <video
-        ref={videoBRef}
-        muted
-        playsInline
-        preload="none"
-        className={`absolute inset-0 w-full h-full object-cover ${
-          autoplayBlocked ? "invisible" : ""
-        }`}
-      />
+        className="absolute inset-0 w-full h-full object-cover"
+      >
+        <source src="/videos/hero-home.mp4" type="video/mp4" />
+      </video>
 
-      {/* Black cover — fades out once video plays or fallback shows */}
+      {/* Black cover — fades out once video is playing */}
       <div
-        className={`absolute inset-0 bg-black z-[2] transition-opacity duration-1000 ${
+        className={`absolute inset-0 bg-black z-[1] transition-opacity duration-1000 ${
           videoReady ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       />
 
       {/* Overlay */}
-      <div className="absolute inset-0 z-[3] bg-gradient-to-t from-black/80 via-black/20 to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30" />
 
-      {/* Content */}
-      <div className="relative z-[4] w-full px-8 sm:px-12 lg:px-20 pb-20 sm:pb-28">
+      {/* Content — bottom-left */}
+      <div className="relative z-10 w-full px-8 sm:px-12 lg:px-20 pb-20 sm:pb-28">
         <p className="text-[12px] sm:text-[13px] font-body font-semibold tracking-[0.3em] uppercase text-white/80 mb-5">
           Jesus Rules Ministries
         </p>
@@ -253,7 +101,7 @@ export default function Hero() {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[4]">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
         <div className="w-[1px] h-10 bg-gradient-to-b from-transparent to-white/30" />
       </div>
     </section>
