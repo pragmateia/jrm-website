@@ -95,7 +95,7 @@ export default function ProductMarquee({ items }: { items: MarqueeItem[] }) {
         }
       }
       if (!paused.current) {
-        scrollPos.current += 0.5;
+        scrollPos.current += 0.6;
         wrapScrollPos();
         if (isVertical) {
           containerRef.current.scrollTop = scrollPos.current;
