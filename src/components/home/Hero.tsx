@@ -25,27 +25,20 @@ export default function Hero() {
     let cancelled = false;
     let rafId: number | null = null;
 
-    // Pick a random starting part on the client only (avoids hydration mismatch).
-    const startPart = Math.floor(Math.random() * HERO_PARTS.length);
-    partIndex.current = startPart;
+    // Always start with part 0 (matches the src in JSX). Do NOT change
+    // video.src here — doing so cancels iOS autoplay.
+    partIndex.current = 0;
 
-    // If random pick differs from the deterministic first part, swap the src.
-    // This happens after hydration so there's no mismatch.
-    if (startPart !== 0) {
-      video.src = HERO_PARTS[startPart];
-    }
-
-    // iOS Safari autoplay: Do NOT seek before play. Seeking before the first
-    // play breaks autoplay on iOS even with muted + playsInline. Just let
-    // the video play from the beginning and call play() explicitly.
-    const handleCanPlay = () => {
+    // Nudge play in case autoPlay attribute alone isn't enough (some browsers
+    // need an explicit play() call). Only do this AFTER canplay so iOS is happy.
+    const nudgePlay = () => {
       if (cancelled) return;
       video.play().catch(() => {});
     };
     if (video.readyState >= 3) {
-      handleCanPlay();
+      nudgePlay();
     } else {
-      video.addEventListener("canplay", handleCanPlay, { once: true });
+      video.addEventListener("canplay", nudgePlay, { once: true });
     }
 
     const handlePlaying = () => {
@@ -56,8 +49,7 @@ export default function Hero() {
     video.addEventListener("playing", handlePlaying, { once: true });
 
     // Preload the next part
-    const nextPart = (startPart + 1) % HERO_PARTS.length;
-    nextVideo.src = HERO_PARTS[nextPart];
+    nextVideo.src = HERO_PARTS[1];
     nextVideo.load();
 
     const swapToNext = () => {
@@ -107,7 +99,7 @@ export default function Hero() {
       if (rafId !== null) cancelAnimationFrame(rafId);
       video.removeEventListener("playing", handlePlaying);
       video.removeEventListener("ended", handleEnded);
-      video.removeEventListener("canplay", handleCanPlay);
+      video.removeEventListener("canplay", nudgePlay);
       video.pause();
       nextVideo.pause();
     };
