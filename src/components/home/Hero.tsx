@@ -19,8 +19,6 @@ export default function Hero() {
   const [videoReady, setVideoReady] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const playingRef = useRef(false);
-  // Which buffer is currently active: "A" or "B"
-  const [activeBuffer, setActiveBuffer] = useState<"A" | "B">("A");
 
   useEffect(() => {
     const videoA = videoARef.current;
@@ -30,8 +28,11 @@ export default function Hero() {
     let cancelled = false;
     let active: HTMLVideoElement = videoA;
     let standby: HTMLVideoElement = videoB;
-    let activeIs: "A" | "B" = "A";
     let nextReady = false;
+
+    // Set initial z-index (active in front)
+    active.style.zIndex = "1";
+    standby.style.zIndex = "0";
 
     // --- Random start part (client-only) ---
     const startIdx = Math.floor(Math.random() * HERO_PARTS.length);
@@ -86,15 +87,16 @@ export default function Hero() {
       if (cancelled) return;
 
       if (nextReady) {
-        // Play the standby buffer (already loaded, frame rendered)
+        // Swap z-index IMMEDIATELY via DOM — no React re-render delay
+        standby.style.zIndex = "1";
+        active.style.zIndex = "0";
+
         standby.play().then(() => {
           // Swap roles
           const prevActive = active;
           active = standby;
           standby = prevActive;
-          activeIs = activeIs === "A" ? "B" : "A";
           currentIdx = (currentIdx + 1) % HERO_PARTS.length;
-          setActiveBuffer(activeIs);
 
           // Attach ended listener to the new active
           active.addEventListener("ended", onEnded, { once: true });
@@ -102,7 +104,9 @@ export default function Hero() {
           // Start preloading the next part into the new standby
           loadNext();
         }).catch(() => {
-          // Standby failed to play — replay current part
+          // Revert z-index swap
+          standby.style.zIndex = "0";
+          active.style.zIndex = "1";
           active.currentTime = 0;
           active.addEventListener("ended", onEnded, { once: true });
           active.play().catch(() => {});
@@ -168,7 +172,7 @@ export default function Hero() {
         preload="auto"
         className={`absolute inset-0 w-full h-full object-cover ${
           autoplayBlocked ? "invisible" : ""
-        } ${activeBuffer === "A" ? "z-[1]" : "z-0"}`}
+        }`}
       />
       <video
         ref={videoBRef}
@@ -177,7 +181,7 @@ export default function Hero() {
         preload="none"
         className={`absolute inset-0 w-full h-full object-cover ${
           autoplayBlocked ? "invisible" : ""
-        } ${activeBuffer === "B" ? "z-[1]" : "z-0"}`}
+        }`}
       />
 
       {/* Black cover — fades out once video plays or fallback shows */}
