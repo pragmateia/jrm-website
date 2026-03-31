@@ -30,13 +30,7 @@ export default function Hero() {
     // --- Random start part (client-only) ---
     const startIdx = Math.floor(Math.random() * HERO_PARTS.length);
     let currentIdx = startIdx;
-
-    // Change src before first play if not part1.
-    // iOS allows muted+playsinline videos to autoplay even with
-    // programmatic src — the previous failures were from other bugs.
-    if (startIdx !== 0) {
-      video.src = HERO_PARTS[startIdx];
-    }
+    video.src = HERO_PARTS[startIdx];
 
     // --- Autoplay ---
     const tryPlay = () => {
@@ -154,9 +148,10 @@ export default function Hero() {
       />
 
       {/* Main video */}
+      {/* No src in markup — useEffect sets the random part directly,
+          avoiding a wasted preload of part1 */}
       <video
         ref={videoRef}
-        src={HERO_PARTS[0]}
         autoPlay
         muted
         playsInline
