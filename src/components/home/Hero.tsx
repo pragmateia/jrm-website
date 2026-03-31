@@ -17,6 +17,7 @@ export default function Hero() {
   const [videoReady, setVideoReady] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const partIndex = useRef(0);
+  const playingRef = useRef(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -50,6 +51,7 @@ export default function Hero() {
 
     const handlePlaying = () => {
       if (!cancelled) {
+        playingRef.current = true;
         setVideoReady(true);
       }
     };
@@ -94,9 +96,10 @@ export default function Hero() {
 
     video.addEventListener("ended", handleEnded);
 
-    // Fallback: if nothing happens after 5s, show the fallback image
+    // Fallback: if nothing happens after 5s, show the fallback image.
+    // Use playingRef (not videoReady state) to avoid stale closure.
     const fallback = setTimeout(() => {
-      if (!cancelled && !videoReady) {
+      if (!cancelled && !playingRef.current) {
         setAutoplayBlocked(true);
         setVideoReady(true);
       }
