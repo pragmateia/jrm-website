@@ -15,6 +15,7 @@ export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const nextVideoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const partIndex = useRef(0);
 
   useEffect(() => {
@@ -24,21 +25,27 @@ export default function Hero() {
 
     let cancelled = false;
     let rafId: number | null = null;
-
-    // Always start with part 0 (matches the src in JSX). Do NOT change
-    // video.src here — doing so cancels iOS autoplay.
     partIndex.current = 0;
 
-    // Nudge play in case autoPlay attribute alone isn't enough (some browsers
-    // need an explicit play() call). Only do this AFTER canplay so iOS is happy.
-    const nudgePlay = () => {
+    const startPlayback = () => {
       if (cancelled) return;
-      video.play().catch(() => {});
+      video.play().then(() => {
+        // Autoplay worked — video is playing
+      }).catch(() => {
+        // Autoplay blocked (Low Power Mode, data saver, etc.)
+        // Hide video element so native play button doesn't show,
+        // reveal fallback image instead.
+        if (!cancelled) {
+          setAutoplayBlocked(true);
+          setVideoReady(true); // fade out black cover to show fallback image
+        }
+      });
     };
+
     if (video.readyState >= 3) {
-      nudgePlay();
+      startPlayback();
     } else {
-      video.addEventListener("canplay", nudgePlay, { once: true });
+      video.addEventListener("canplay", startPlayback, { once: true });
     }
 
     const handlePlaying = () => {
@@ -87,11 +94,13 @@ export default function Hero() {
 
     video.addEventListener("ended", handleEnded);
 
+    // Fallback: if nothing happens after 5s, show the fallback image
     const fallback = setTimeout(() => {
-      if (!cancelled) {
+      if (!cancelled && !videoReady) {
+        setAutoplayBlocked(true);
         setVideoReady(true);
       }
-    }, 4000);
+    }, 5000);
 
     return () => {
       cancelled = true;
@@ -99,24 +108,35 @@ export default function Hero() {
       if (rafId !== null) cancelAnimationFrame(rafId);
       video.removeEventListener("playing", handlePlaying);
       video.removeEventListener("ended", handleEnded);
-      video.removeEventListener("canplay", nudgePlay);
+      video.removeEventListener("canplay", startPlayback);
       video.pause();
       nextVideo.pause();
     };
   }, []);
 
+  // Tap-to-play: if autoplay was blocked, first user tap starts the video
+  const handleTap = () => {
+    if (!autoplayBlocked) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.play().then(() => {
+      setAutoplayBlocked(false);
+    }).catch(() => {});
+  };
+
   return (
-    <section className="relative min-h-[100dvh] flex items-end overflow-hidden -mt-[env(safe-area-inset-top)] pt-[env(safe-area-inset-top)]">
-      {/* Fallback image */}
+    <section
+      className="relative min-h-[100dvh] flex items-end overflow-hidden -mt-[env(safe-area-inset-top)] pt-[env(safe-area-inset-top)]"
+      onClick={handleTap}
+    >
+      {/* Fallback image — visible when autoplay is blocked */}
       <img
         src="/images/editorial/beach-walk.jpg"
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Main video player — always starts with HERO_PARTS[0] for SSR/client
-          match. useEffect swaps to random part after mount. Attributes needed
-          for iOS autoplay: autoPlay + muted + playsInline (all three required). */}
+      {/* Main video — hidden when autoplay is blocked to prevent native play button */}
       <video
         ref={videoRef}
         src={HERO_PARTS[0]}
@@ -124,7 +144,7 @@ export default function Hero() {
         muted
         playsInline
         preload="auto"
-        className="absolute inset-0 w-full h-full object-cover"
+        className={`absolute inset-0 w-full h-full object-cover ${autoplayBlocked ? "invisible" : ""}`}
       />
 
       {/* Hidden preloader for next part */}
@@ -136,7 +156,7 @@ export default function Hero() {
         className="hidden"
       />
 
-      {/* Black cover — fades out once video is playing */}
+      {/* Black cover — fades out once video is playing or fallback image should show */}
       <div
         className={`absolute inset-0 bg-black z-[1] transition-opacity duration-1000 ${
           videoReady ? "opacity-0 pointer-events-none" : "opacity-100"
