@@ -28,10 +28,10 @@ export default function Hero() {
     video.src = HERO_PARTS[startPart];
     video.load();
 
-    // Random seek within the chosen part once metadata is available
+    // Random seek within first 70% so there's buffer time to preload next part
     const handleLoaded = () => {
       if (video.duration) {
-        video.currentTime = Math.random() * video.duration;
+        video.currentTime = Math.random() * video.duration * 0.7;
       }
     };
     if (video.readyState >= 1) {
@@ -49,19 +49,34 @@ export default function Hero() {
     nextVideo.load();
 
     const handleEnded = () => {
-      // Advance to next part (loop back to 0)
+      // If next part isn't ready, loop current part until it is
+      if (nextVideo.readyState < 3) {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+        const checkReady = () => {
+          if (nextVideo.readyState >= 3) {
+            video.pause();
+            swapToNext();
+          } else {
+            requestAnimationFrame(checkReady);
+          }
+        };
+        requestAnimationFrame(checkReady);
+        return;
+      }
+      swapToNext();
+    };
+
+    const swapToNext = () => {
       partIndex.current = (partIndex.current + 1) % HERO_PARTS.length;
       const currentPart = partIndex.current;
-      const nextPart = (currentPart + 1) % HERO_PARTS.length;
+      const upcomingPart = (currentPart + 1) % HERO_PARTS.length;
 
-      // Swap: nextVideo becomes visible, video becomes the preloader
-      // Copy the preloaded src to the main player
       video.src = nextVideo.src;
       video.load();
       video.play().catch(() => {});
 
-      // Preload the upcoming part in the hidden video
-      nextVideo.src = HERO_PARTS[nextPart];
+      nextVideo.src = HERO_PARTS[upcomingPart];
       nextVideo.load();
     };
 
