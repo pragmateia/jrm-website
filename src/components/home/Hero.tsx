@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState } from "react";
 
 const HERO_PARTS = [
   "/videos/hero-part1.mp4",
@@ -17,9 +17,6 @@ export default function Hero() {
   const [videoReady, setVideoReady] = useState(false);
   const partIndex = useRef(0);
 
-  // Pick random start part once at render time so it can be set in JSX
-  const initialPart = useMemo(() => Math.floor(Math.random() * HERO_PARTS.length), []);
-
   useEffect(() => {
     const video = videoRef.current;
     const nextVideo = nextVideoRef.current;
@@ -27,31 +24,39 @@ export default function Hero() {
 
     let cancelled = false;
     let rafId: number | null = null;
-    partIndex.current = initialPart;
 
-    // Random seek within first 70% once metadata is available
-    const handleLoaded = () => {
+    // Pick a random starting part on the client only (avoids hydration mismatch).
+    const startPart = Math.floor(Math.random() * HERO_PARTS.length);
+    partIndex.current = startPart;
+
+    // If random pick differs from the deterministic first part, swap the src.
+    // This happens after hydration so there's no mismatch.
+    if (startPart !== 0) {
+      video.src = HERO_PARTS[startPart];
+    }
+
+    // iOS Safari autoplay: Do NOT seek before play. Seeking before the first
+    // play breaks autoplay on iOS even with muted + playsInline. Just let
+    // the video play from the beginning and call play() explicitly.
+    const handleCanPlay = () => {
       if (cancelled) return;
-      if (video.duration) {
-        video.currentTime = Math.random() * video.duration * 0.7;
-      }
-      // Explicit play call for iOS — autoPlay alone isn't enough when
-      // we seek before playback starts
       video.play().catch(() => {});
     };
-    if (video.readyState >= 1) {
-      handleLoaded();
+    if (video.readyState >= 3) {
+      handleCanPlay();
     } else {
-      video.addEventListener("loadedmetadata", handleLoaded, { once: true });
+      video.addEventListener("canplay", handleCanPlay, { once: true });
     }
 
     const handlePlaying = () => {
-      if (!cancelled) setVideoReady(true);
+      if (!cancelled) {
+        setVideoReady(true);
+      }
     };
     video.addEventListener("playing", handlePlaying, { once: true });
 
     // Preload the next part
-    const nextPart = (initialPart + 1) % HERO_PARTS.length;
+    const nextPart = (startPart + 1) % HERO_PARTS.length;
     nextVideo.src = HERO_PARTS[nextPart];
     nextVideo.load();
 
@@ -91,7 +96,9 @@ export default function Hero() {
     video.addEventListener("ended", handleEnded);
 
     const fallback = setTimeout(() => {
-      if (!cancelled) setVideoReady(true);
+      if (!cancelled) {
+        setVideoReady(true);
+      }
     }, 4000);
 
     return () => {
@@ -100,14 +107,14 @@ export default function Hero() {
       if (rafId !== null) cancelAnimationFrame(rafId);
       video.removeEventListener("playing", handlePlaying);
       video.removeEventListener("ended", handleEnded);
-      video.removeEventListener("loadedmetadata", handleLoaded);
+      video.removeEventListener("canplay", handleCanPlay);
       video.pause();
       nextVideo.pause();
     };
-  }, [initialPart]);
+  }, []);
 
   return (
-    <section className="relative h-screen flex items-end overflow-hidden">
+    <section className="relative min-h-[100dvh] flex items-end overflow-hidden -mt-[env(safe-area-inset-top)] pt-[env(safe-area-inset-top)]">
       {/* Fallback image */}
       <img
         src="/images/editorial/beach-walk.jpg"
@@ -115,10 +122,12 @@ export default function Hero() {
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Main video player — src set in markup so iOS trusts autoPlay */}
+      {/* Main video player — always starts with HERO_PARTS[0] for SSR/client
+          match. useEffect swaps to random part after mount. Attributes needed
+          for iOS autoplay: autoPlay + muted + playsInline (all three required). */}
       <video
         ref={videoRef}
-        src={HERO_PARTS[initialPart]}
+        src={HERO_PARTS[0]}
         autoPlay
         muted
         playsInline
