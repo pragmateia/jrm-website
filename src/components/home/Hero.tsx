@@ -3,62 +3,106 @@
 import Link from "next/link";
 import { useRef, useEffect, useState } from "react";
 
+const HERO_PARTS = [
+  "/videos/hero-part1.mp4",
+  "/videos/hero-part2.mp4",
+  "/videos/hero-part3.mp4",
+  "/videos/hero-part4.mp4",
+  "/videos/hero-part5.mp4",
+];
+
 export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const nextVideoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
+  const partIndex = useRef(0);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    const nextVideo = nextVideoRef.current;
+    if (!video || !nextVideo) return;
 
+    // Pick a random part to start with
+    const startPart = Math.floor(Math.random() * HERO_PARTS.length);
+    partIndex.current = startPart;
+    video.src = HERO_PARTS[startPart];
+    video.load();
+
+    // Random seek within the chosen part once metadata is available
     const handleLoaded = () => {
       if (video.duration) {
         video.currentTime = Math.random() * video.duration;
       }
     };
-
-    const handlePlaying = () => {
-      setVideoReady(true);
-    };
-
     if (video.readyState >= 1) {
       handleLoaded();
     } else {
       video.addEventListener("loadedmetadata", handleLoaded, { once: true });
     }
 
+    const handlePlaying = () => setVideoReady(true);
     video.addEventListener("playing", handlePlaying, { once: true });
+
+    // Preload the next part
+    const nextPart = (startPart + 1) % HERO_PARTS.length;
+    nextVideo.src = HERO_PARTS[nextPart];
+    nextVideo.load();
+
+    const handleEnded = () => {
+      // Advance to next part (loop back to 0)
+      partIndex.current = (partIndex.current + 1) % HERO_PARTS.length;
+      const currentPart = partIndex.current;
+      const nextPart = (currentPart + 1) % HERO_PARTS.length;
+
+      // Swap: nextVideo becomes visible, video becomes the preloader
+      // Copy the preloaded src to the main player
+      video.src = nextVideo.src;
+      video.load();
+      video.play().catch(() => {});
+
+      // Preload the upcoming part in the hidden video
+      nextVideo.src = HERO_PARTS[nextPart];
+      nextVideo.load();
+    };
+
+    video.addEventListener("ended", handleEnded);
 
     const fallback = setTimeout(() => setVideoReady(true), 4000);
 
     return () => {
       clearTimeout(fallback);
-      video.removeEventListener("loadedmetadata", handleLoaded);
       video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("ended", handleEnded);
     };
   }, []);
 
   return (
     <section className="relative h-screen flex items-end overflow-hidden">
-      {/* Fallback image — visible if video fails to load */}
+      {/* Fallback image */}
       <img
         src="/images/editorial/beach-walk.jpg"
         alt=""
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Background Video — sits on top of fallback image */}
+      {/* Main video player */}
       <video
         ref={videoRef}
         autoPlay
         muted
-        loop
         playsInline
         preload="auto"
         className="absolute inset-0 w-full h-full object-cover"
-      >
-        <source src="/videos/hero-home.mp4" type="video/mp4" />
-      </video>
+      />
+
+      {/* Hidden preloader for next part */}
+      <video
+        ref={nextVideoRef}
+        muted
+        playsInline
+        preload="auto"
+        className="hidden"
+      />
 
       {/* Black cover — fades out once video is playing */}
       <div
