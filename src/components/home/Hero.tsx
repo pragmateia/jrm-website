@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 
 const HERO_PARTS = [
   "/videos/hero-part1.mp4",
@@ -17,6 +17,9 @@ export default function Hero() {
   const [videoReady, setVideoReady] = useState(false);
   const partIndex = useRef(0);
 
+  // Pick random start part once at render time so it can be set in JSX
+  const initialPart = useMemo(() => Math.floor(Math.random() * HERO_PARTS.length), []);
+
   useEffect(() => {
     const video = videoRef.current;
     const nextVideo = nextVideoRef.current;
@@ -24,19 +27,16 @@ export default function Hero() {
 
     let cancelled = false;
     let rafId: number | null = null;
+    partIndex.current = initialPart;
 
-    // Pick a random part to start with
-    const startPart = Math.floor(Math.random() * HERO_PARTS.length);
-    partIndex.current = startPart;
-    video.src = HERO_PARTS[startPart];
-    video.load();
-
-    // Random seek within first 70% so there's buffer time to preload next part
+    // Random seek within first 70% once metadata is available
     const handleLoaded = () => {
       if (cancelled) return;
       if (video.duration) {
         video.currentTime = Math.random() * video.duration * 0.7;
       }
+      // Explicit play call for iOS — autoPlay alone isn't enough when
+      // we seek before playback starts
       video.play().catch(() => {});
     };
     if (video.readyState >= 1) {
@@ -51,7 +51,7 @@ export default function Hero() {
     video.addEventListener("playing", handlePlaying, { once: true });
 
     // Preload the next part
-    const nextPart = (startPart + 1) % HERO_PARTS.length;
+    const nextPart = (initialPart + 1) % HERO_PARTS.length;
     nextVideo.src = HERO_PARTS[nextPart];
     nextVideo.load();
 
@@ -70,7 +70,6 @@ export default function Hero() {
 
     const handleEnded = () => {
       if (cancelled) return;
-      // If next part isn't ready, loop current part until it is
       if (nextVideo.readyState < 3) {
         video.currentTime = 0;
         video.play().catch(() => {});
@@ -103,13 +102,9 @@ export default function Hero() {
       video.removeEventListener("ended", handleEnded);
       video.removeEventListener("loadedmetadata", handleLoaded);
       video.pause();
-      video.removeAttribute("src");
-      video.load();
       nextVideo.pause();
-      nextVideo.removeAttribute("src");
-      nextVideo.load();
     };
-  }, []);
+  }, [initialPart]);
 
   return (
     <section className="relative h-screen flex items-end overflow-hidden">
@@ -120,9 +115,10 @@ export default function Hero() {
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Main video player */}
+      {/* Main video player — src set in markup so iOS trusts autoPlay */}
       <video
         ref={videoRef}
+        src={HERO_PARTS[initialPart]}
         autoPlay
         muted
         playsInline
