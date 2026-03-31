@@ -162,6 +162,7 @@ export default function Hero() {
           are seamless — no flash of fallback image. */}
       <video
         ref={videoARef}
+        autoPlay
         muted
         playsInline
         preload="auto"
@@ -173,7 +174,7 @@ export default function Hero() {
         ref={videoBRef}
         muted
         playsInline
-        preload="auto"
+        preload="none"
         className={`absolute inset-0 w-full h-full object-cover ${
           autoplayBlocked ? "invisible" : ""
         } ${activeBuffer === "B" ? "z-[1]" : "z-0"}`}
