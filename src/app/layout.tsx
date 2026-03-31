@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -16,6 +16,13 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
 });
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+  themeColor: "#000000",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://jesusrules.co"),
