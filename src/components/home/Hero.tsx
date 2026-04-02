@@ -7,10 +7,21 @@ export default function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+
+  // Pick the right video file based on viewport width
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    setVideoSrc(
+      isMobile
+        ? "/videos/hero-home-mobile.mp4"
+        : "/videos/hero-home-desktop.mp4"
+    );
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !videoSrc) return;
 
     const handleLoaded = () => {
       if (video.duration) {
@@ -47,7 +58,7 @@ export default function Hero() {
       video.removeEventListener("loadedmetadata", handleLoaded);
       video.removeEventListener("playing", handlePlaying);
     };
-  }, []);
+  }, [videoSrc]);
 
   return (
     <section className="relative h-screen flex items-end overflow-hidden">
@@ -59,21 +70,24 @@ export default function Hero() {
       />
 
       {/* Background Video — sits on top of fallback image.
+          Serves desktop (1080p) or mobile (540p) based on viewport.
           Hidden when autoplay is blocked (iOS Low Power Mode) to prevent
           the native play button overlay from appearing. */}
-      <video
-        ref={videoRef}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        className={`absolute inset-0 w-full h-full object-cover ${
-          autoplayBlocked ? "hidden" : ""
-        }`}
-      >
-        <source src="/videos/hero-home.mp4" type="video/mp4" />
-      </video>
+      {videoSrc && (
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className={`absolute inset-0 w-full h-full object-cover ${
+            autoplayBlocked ? "hidden" : ""
+          }`}
+        >
+          <source src={videoSrc} type="video/mp4" />
+        </video>
+      )}
 
       {/* Black cover — fades out once video is playing */}
       <div
