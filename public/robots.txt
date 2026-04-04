@@ -1,0 +1,5 @@
+# https://jesusrules.co robots.txt
+User-agent: *
+Allow: /
+
+Sitemap: https://jesusrules.co/sitemap.xml
