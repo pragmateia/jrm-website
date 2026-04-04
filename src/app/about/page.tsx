@@ -1,6 +1,48 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import FAQSection from "@/components/FAQSection";
+
+const aboutFAQs = [
+  {
+    question: "What is Jesus Rules Ministries?",
+    answer:
+      "A 501(c)(3) nonprofit that uses professional beach volleyball to spread the Gospel worldwide. Founded in 2021 and based in Southern California.",
+  },
+  {
+    question: "Who founded Jesus Rules Ministries?",
+    answer:
+      "Diego Perez (President) and Michael Clark (Head Coach & Director). Diego is a professional beach volleyball player ranked in the top 40 nationally, pursuing the 2028 LA Olympics with partner Dave Wieczorek.",
+  },
+  {
+    question: "How does Jesus Rules Ministries fund its mission?",
+    answer:
+      "Through tax-deductible donations, merchandise sales, and partnerships. 100% of contributions go toward tournament travel, outreach events, and discipleship training.",
+  },
+  {
+    question: "Is Jesus Rules Ministries a registered nonprofit?",
+    answer:
+      "Yes, it\u2019s a 501(c)(3) tax-exempt organization (EIN: 33-3630279). All donations are tax-deductible.",
+  },
+  {
+    question: "Where does Jesus Rules Ministries compete?",
+    answer:
+      "On the AVP League, Heritage Majors, Heritage Contenders, and international Beach Pro Tour circuits across the United States and internationally.",
+  },
+];
+
+const aboutFAQJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: aboutFAQs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })),
+};
 
 export const metadata: Metadata = {
   title: "About",
@@ -411,6 +453,19 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ */}
+      <section className="py-20 sm:py-28 bg-background border-t border-white/5">
+        <div className="max-w-3xl mx-auto px-8 sm:px-12 lg:px-10">
+          <FAQSection items={aboutFAQs} />
+        </div>
+      </section>
+
+      {/* FAQPage JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutFAQJsonLd) }}
+      />
     </div>
   );
 }

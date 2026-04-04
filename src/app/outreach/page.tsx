@@ -2,6 +2,50 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import ContactForm from "@/components/ContactForm";
 import PageHero from "@/components/PageHero";
+import FAQSection from "@/components/FAQSection";
+
+const outreachFAQs = [
+  {
+    question:
+      "How do I book a volleyball clinic with Jesus Rules Ministries?",
+    answer:
+      "Contact us at info@jesusrules.co or through our website. We bring professional-level volleyball instruction combined with Gospel preaching to churches, schools, and community organizations.",
+  },
+  {
+    question: "What does a Jesus Rules outreach event include?",
+    answer:
+      "A professional beach volleyball clinic or exhibition, a Gospel message, and opportunities for prayer and discipleship. Events can be customized for your organization\u2019s needs.",
+  },
+  {
+    question: "How much does it cost to host an outreach event?",
+    answer:
+      "We work with each organization individually. Many events are funded through our ministry\u2019s budget and donor support. Contact us to discuss your specific situation.",
+  },
+  {
+    question:
+      "Where can Jesus Rules Ministries hold outreach events?",
+    answer:
+      "Anywhere! We\u2019ve done events at churches, schools, community centers, and beach venues. We travel nationally for outreach opportunities.",
+  },
+  {
+    question: "Can Jesus Rules come to my church?",
+    answer:
+      "Absolutely. We love partnering with local churches for volleyball clinics, worship services, and outreach events. Reach out at info@jesusrules.co to start the conversation.",
+  },
+];
+
+const outreachFAQJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: outreachFAQs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })),
+};
 
 export const metadata: Metadata = {
   title: "Outreach",
@@ -154,6 +198,23 @@ export default function OutreachPage() {
           <ContactForm type="ambassador" />
         </div>
       </section>
+
+      {/* FAQ */}
+      <section className="py-20 sm:py-28 bg-cream border-t border-white/5">
+        <div className="max-w-3xl mx-auto px-8 sm:px-12 lg:px-10">
+          <FAQSection
+            items={outreachFAQs}
+            label="Outreach FAQ"
+            heading="Common Questions"
+          />
+        </div>
+      </section>
+
+      {/* FAQPage JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(outreachFAQJsonLd) }}
+      />
     </div>
   );
 }
