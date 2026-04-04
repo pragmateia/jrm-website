@@ -2,8 +2,9 @@ import type { MetadataRoute } from "next";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
+import { getProducts } from "@/lib/shopify";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://jesusrules.co";
 
   // Static routes with their priorities and change frequencies
@@ -74,5 +75,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Blog directory doesn't exist or is empty — skip
   }
 
-  return [...staticRoutes, ...blogRoutes];
+  // Dynamic Shopify product routes
+  let productRoutes: MetadataRoute.Sitemap = [];
+
+  try {
+    const products = await getProducts(50);
+    productRoutes = products.map((product) => ({
+      url: `${baseUrl}/shop/${product.handle}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+  } catch {
+    // Shopify unavailable — skip product routes so build doesn't break
+  }
+
+  return [...staticRoutes, ...blogRoutes, ...productRoutes];
 }

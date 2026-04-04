@@ -5,7 +5,10 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn about Jesus Rules Ministries — our mission, our team, and why we believe athletic excellence opens doors for the Gospel.",
+    "Meet the team behind Jesus Rules Ministries — a 501(c)(3) nonprofit using professional beach volleyball to open doors for the Gospel. Founded in Irvine, CA.",
+  alternates: {
+    canonical: "/about",
+  },
 };
 
 export default function AboutPage() {
@@ -17,6 +20,7 @@ export default function AboutPage() {
           src="/images/editorial/beach-walk.jpg"
           alt="About the Ministry"
           fill
+          sizes="100vw"
           className="object-cover"
           priority
         />
@@ -26,7 +30,7 @@ export default function AboutPage() {
             Our Story
           </p>
           <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl text-white tracking-tight mb-6 sm:mb-8">
-            About the Ministry
+            About Jesus Rules Ministries
           </h1>
 
           {/* Interview videos — large, inside the hero */}
@@ -192,6 +196,7 @@ export default function AboutPage() {
                   src="/images/editorial/michael-courtside.jpg"
                   alt="Michael Clark courtside at AVP tournament"
                   fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
                 />
               </div>
@@ -272,6 +277,7 @@ export default function AboutPage() {
                   src="/images/editorial/diego-highfive.jpg"
                   alt="Diego Perez high-fiving fans"
                   fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
                 />
               </div>

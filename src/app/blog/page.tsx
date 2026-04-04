@@ -6,7 +6,10 @@ import { getAllPosts } from "@/lib/blog";
 export const metadata: Metadata = {
   title: "Blog",
   description:
-    "Tournament recaps, ministry updates, and stories from the road with Jesus Rules Ministries.",
+    "Tournament recaps, behind-the-scenes stories, and ministry updates from the Jesus Rules Ministries team competing on the professional beach volleyball tour.",
+  alternates: {
+    canonical: "/blog",
+  },
 };
 
 export default function BlogPage() {
@@ -21,7 +24,7 @@ export default function BlogPage() {
             Journal
           </p>
           <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl text-text-primary tracking-tight">
-            From the Field
+            Jesus Rules Blog
           </h1>
         </div>
       </section>
@@ -58,6 +61,7 @@ export default function BlogPage() {
                         src={post.coverImage}
                         alt={post.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, 256px"
                         className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
                       />
                     </div>

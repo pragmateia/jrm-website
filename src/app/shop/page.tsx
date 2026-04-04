@@ -13,7 +13,10 @@ import { inferCategory, STYLE_CARDS, getActiveHandles } from "@/lib/product-cate
 export const metadata: Metadata = {
   title: "Shop",
   description:
-    "Shop Jesus Rules Ministries merchandise. Every purchase supports tournament travel, discipleship training, and Gospel outreach.",
+    "Shop Christian beach volleyball apparel from Jesus Rules Ministries. Tees, hoodies, and hats. 100% of proceeds fund tournament travel and Gospel outreach.",
+  alternates: {
+    canonical: "/shop",
+  },
 };
 
 const placeholderProducts = [
@@ -186,7 +189,7 @@ export default async function ShopPage() {
             Jesus Rules Ministries
           </p>
           <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl text-white tracking-tight mb-4">
-            The Collection
+            Jesus Rules Apparel
           </h1>
           <p className="font-heading text-white/60 text-lg sm:text-xl italic max-w-md mb-8">
             Wear the mission. Start conversations. Support the Gospel.

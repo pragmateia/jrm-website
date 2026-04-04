@@ -6,7 +6,10 @@ import PageHero from "@/components/PageHero";
 export const metadata: Metadata = {
   title: "Outreach",
   description:
-    "Invite Jesus Rules Ministries to your church or organization for volleyball clinics combined with Gospel preaching.",
+    "Invite Jesus Rules Ministries to your church, school, or community for professional beach volleyball clinics paired with Gospel preaching and discipleship.",
+  alternates: {
+    canonical: "/outreach",
+  },
 };
 
 export default function OutreachPage() {

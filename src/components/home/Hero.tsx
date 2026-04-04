@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRef, useEffect, useState } from "react";
 
 export default function Hero() {
@@ -63,10 +64,13 @@ export default function Hero() {
   return (
     <section className="relative h-screen flex items-end overflow-hidden">
       {/* Fallback image — visible if video fails to load */}
-      <img
+      <Image
         src="/images/editorial/beach-walk.jpg"
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
+        alt="Beach volleyball players on the sand"
+        fill
+        sizes="100vw"
+        priority
+        className="object-cover"
       />
 
       {/* Background Video — sits on top of fallback image.

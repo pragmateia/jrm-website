@@ -14,6 +14,7 @@ export default function PageHero({ image, label, title, description }: PageHeroP
         src={image}
         alt={title}
         fill
+        sizes="100vw"
         className="object-cover"
         priority
       />

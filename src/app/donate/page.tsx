@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Donate",
   description:
     "Support Jesus Rules Ministries. Your tax-deductible donation funds tournament travel, discipleship training, and Gospel outreach worldwide.",
+  alternates: {
+    canonical: "/donate",
+  },
 };
 
 // ── Featured Trip Fund ──────────────────────────────────────────────
@@ -199,6 +202,7 @@ export default function DonatePage() {
                     src={member.image}
                     alt={member.name}
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
                   />
                 </div>

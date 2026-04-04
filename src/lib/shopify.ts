@@ -215,7 +215,12 @@ export interface ShopifyProductDetail {
   id: string;
   title: string;
   handle: string;
+  description: string;
   descriptionHtml: string;
+  priceRange: {
+    minVariantPrice: { amount: string; currencyCode: string };
+    maxVariantPrice: { amount: string; currencyCode: string };
+  };
   images: {
     edges: {
       node: {
@@ -252,7 +257,18 @@ export async function getProductByHandle(
         id
         title
         handle
+        description
         descriptionHtml
+        priceRange {
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+          maxVariantPrice {
+            amount
+            currencyCode
+          }
+        }
         images(first: 100) {
           edges {
             node {

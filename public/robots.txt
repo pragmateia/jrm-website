@@ -1,5 +1,7 @@
 # https://jesusrules.co robots.txt
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /cart
 
 Sitemap: https://jesusrules.co/sitemap.xml

@@ -140,6 +140,7 @@ export default function Navbar() {
     <>
       <nav
         ref={navRef}
+        aria-label="Main navigation"
         className="fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top)]"
         style={{
           backgroundColor: `rgba(26, 26, 26, ${ssrBgOpacity})`,

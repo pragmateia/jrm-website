@@ -12,7 +12,7 @@ const footerNav = [
 
 export default function Footer() {
   return (
-    <footer className="bg-dark text-white">
+    <footer aria-label="Site footer" className="bg-dark text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Main footer */}
         <div className="py-20 grid grid-cols-1 md:grid-cols-12 gap-12">

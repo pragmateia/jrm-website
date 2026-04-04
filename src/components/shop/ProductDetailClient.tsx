@@ -195,8 +195,30 @@ export default function ProductDetailClient({
   }, [selectedVariant, images, variantImageUrls, imageToColor, colorOptionName]);
 
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Shop",
+        item: "https://jesusrules.co/shop",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: product.title,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background pt-28 pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="max-w-6xl mx-auto px-6 sm:px-10">
         {/* Breadcrumb */}
         <nav className="mb-8">
@@ -211,8 +233,8 @@ export default function ProductDetailClient({
           </ol>
         </nav>
 
-        {/* Mobile-only title above gallery */}
-        <h1 className="md:hidden font-heading text-3xl text-white tracking-tight mb-4">
+        {/* Product title — single H1 for SEO, responsive sizing */}
+        <h1 className="font-heading text-3xl md:text-4xl text-white tracking-tight mb-4 md:hidden">
           {product.title}
         </h1>
 
@@ -232,9 +254,9 @@ export default function ProductDetailClient({
 
           {/* Right — Product info */}
           <div className="flex flex-col">
-            <h1 className="hidden md:block font-heading text-3xl sm:text-4xl text-white tracking-tight mb-2">
+            <p className="hidden md:block font-heading text-3xl sm:text-4xl text-white tracking-tight mb-2" aria-hidden="true">
               {product.title}
-            </h1>
+            </p>
 
             <p className="text-lg text-white/60 font-body mb-6">${price}</p>
 

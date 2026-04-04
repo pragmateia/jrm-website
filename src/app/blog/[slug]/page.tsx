@@ -21,13 +21,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
-      images: [{ url: post.coverImage }],
+      images: [{ url: post.coverImage, width: 1200, height: 630 }],
       type: "article",
       publishedTime: post.date,
       authors: [post.author],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt,
+      images: [post.coverImage],
     },
   };
 }
@@ -40,14 +49,41 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    image: post.coverImage,
+    datePublished: post.date,
+    author: {
+      "@type": "Person",
+      name: post.author,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Jesus Rules Ministries",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://jesusrules.co/images/laguna-hero.png",
+      },
+    },
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Hero Image — stays dark with white text overlay */}
       <div className="relative h-72 sm:h-96 md:h-[28rem]">
         <Image
           src={post.coverImage}
           alt={post.title}
           fill
+          sizes="100vw"
           className="object-cover"
           priority
         />

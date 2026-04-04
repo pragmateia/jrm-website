@@ -5,7 +5,10 @@ import PageHero from "@/components/PageHero";
 export const metadata: Metadata = {
   title: "Schedule",
   description:
-    "2026 tournament schedule for Jesus Rules Ministries — AVP League, Heritage Majors, and Heritage Contenders.",
+    "2026 professional beach volleyball schedule for Jesus Rules Ministries — AVP League, Heritage Majors, Heritage Contenders, and Beach Pro Tour events.",
+  alternates: {
+    canonical: "/schedule",
+  },
 };
 
 interface Tournament {
@@ -45,6 +48,58 @@ const avpLeague: Tournament[] = [
 const otherEvents: Tournament[] = [
   { name: "Seaside Beach Volleyball Tournament", dates: "August 5–9", location: "Seaside, OR" },
 ];
+
+/** Parse a date string like "April 17–19" into an ISO start date for 2026. */
+function parseTournamentStartDate(dates: string): string {
+  const match = dates.match(/^(\w+)\s+(\d+)/);
+  if (!match) return "2026-01-01";
+  const [, month, day] = match;
+  const d = new Date(`${month} ${day}, 2026`);
+  if (isNaN(d.getTime())) return "2026-01-01";
+  return d.toISOString().split("T")[0];
+}
+
+/** Parse a location like "Austin, TX" into city and state. */
+function parseLocation(location: string): { city: string; state: string } {
+  const parts = location.split(", ");
+  return { city: parts[0] || location, state: parts[1] || "" };
+}
+
+/** Build SportsEvent JSON-LD entries from all tournament arrays. */
+function buildSportsEventsJsonLd() {
+  const allTournaments = [
+    ...heritageContenders,
+    ...heritageMajors,
+    ...avpLeague.map((t) => ({
+      ...t,
+      name: t.name === "Championships" ? "AVP League Championships" : `AVP League ${t.name}`,
+    })),
+    ...otherEvents,
+  ];
+
+  return allTournaments.map((t) => {
+    const { city, state } = parseLocation(t.location);
+    return {
+      "@type": "SportsEvent",
+      name: t.name,
+      startDate: parseTournamentStartDate(t.dates),
+      location: {
+        "@type": "Place",
+        name: t.location,
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: city,
+          addressRegion: state,
+          addressCountry: "US",
+        },
+      },
+      organizer: {
+        "@type": "Organization",
+        name: "Jesus Rules Ministries",
+      },
+    };
+  });
+}
 
 function TournamentSection({
   label,
@@ -120,8 +175,18 @@ function TournamentSection({
 }
 
 export default function SchedulePage() {
+  const sportsEventsJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": buildSportsEventsJsonLd(),
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsEventsJsonLd) }}
+      />
+
       <PageHero
         image="/images/editorial/chicago-competition.jpg"
         label="2026 Season"
