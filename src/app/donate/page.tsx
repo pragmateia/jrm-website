@@ -35,11 +35,12 @@ const mainCampaign = process.env.NEXT_PUBLIC_DONORBOX_MAIN_CAMPAIGN || "jesus-ru
 const diegoCampaign = process.env.NEXT_PUBLIC_DONORBOX_DIEGO_CAMPAIGN || "support-diego-perez";
 
 const categories = [
-  { name: "General Fund", campaign: mainCampaign, description: "Wherever it's needed most. Keeps the ministry running day to day.", icon: "✦" },
-  { name: "Travel", campaign: "jrm-travel", description: "Flights and housing so we can get to tournaments across the country and world.", icon: "✦" },
-  { name: "Tournament Fees", campaign: "jrm-tournament-fees", description: "Entry fees for AVP and FIVB Beach Pro Tour events.", icon: "✦" },
-  { name: "Equipment & Gear", campaign: "jrm-equipment-and-gear", description: "Volleyball, training, and video production equipment.", icon: "✦" },
-  { name: "Content Production", campaign: "jrm-content-production", description: "Documentary filming, YouTube, and media that shares the story.", icon: "✦" },
+  { name: "General Fund", campaign: mainCampaign, image: "/images/editorial/community-gathering.jpg" },
+  { name: "Flights", campaign: "jrm-travel", image: "/images/London.jpg" },
+  { name: "Housing", campaign: "jrm-travel", image: "/images/housing.jpg" },
+  { name: "Tournament Fees", campaign: "jrm-tournament-fees", image: "/images/Australia.jpg" },
+  { name: "Equipment & Gear", campaign: "jrm-equipment-and-gear", image: "/images/editorial/net-action.png" },
+  { name: "Content Production", campaign: "jrm-content-production", image: "/images/editorial/behind-camera.jpg" },
 ];
 
 const teamMembers = [
@@ -129,36 +130,38 @@ export default function DonatePage() {
 
       {/* Give by Category */}
       <section id="categories" className="py-16 sm:py-24 bg-background">
-        <div className="max-w-3xl mx-auto px-8 sm:px-12 lg:px-10">
+        <div className="max-w-5xl mx-auto px-8 sm:px-12 lg:px-10">
           <div className="text-center mb-10">
             <h2 className="font-body text-2xl sm:text-3xl font-semibold text-white mb-3">
-              Choose Where Your Gift Goes
+              Give by Category
             </h2>
             <p className="text-white/40 text-sm">
               Select a category or give to the general fund.
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
             {categories.map((cat) => (
               <a
                 key={cat.name}
                 href={`https://donorbox.org/${cat.campaign}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-6 p-6 bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-gold/30 transition-all duration-200"
+                className="group relative aspect-[4/3] overflow-hidden"
               >
-                <div className="flex-1">
-                  <h3 className="text-white font-body font-medium text-base mb-1 group-hover:text-gold transition-colors">
+                <Image
+                  src={cat.image}
+                  alt={cat.name}
+                  fill
+                  sizes="(max-width: 640px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10 group-hover:from-black/80 transition-all duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                  <h3 className="text-white font-body font-medium text-sm sm:text-base tracking-wide">
                     {cat.name}
                   </h3>
-                  <p className="text-white/40 text-sm leading-relaxed">
-                    {cat.description}
-                  </p>
                 </div>
-                <span className="text-white/20 group-hover:text-gold transition-colors text-lg">
-                  →
-                </span>
               </a>
             ))}
           </div>
