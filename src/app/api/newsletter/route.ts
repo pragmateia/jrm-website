@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    // Best-effort abuse limiting: 5 signups per IP per 10 minutes
+    if (!checkRateLimit(`newsletter:${getClientIp(req)}`, 5, 10 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
 
-    if (!email || !email.includes("@")) {
+    const body = await req.json();
+    const email =
+      typeof body.email === "string" ? body.email.trim().slice(0, 254) : "";
+
+    if (!email || !EMAIL_RE.test(email)) {
       return NextResponse.json(
         { error: "Valid email is required" },
         { status: 400 }

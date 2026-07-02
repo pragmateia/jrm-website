@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { ShopifyProductDetail } from "@/lib/shopify";
+import { serializeJsonLd } from "@/lib/jsonld";
 import ProductGallery from "./ProductGallery";
 import VariantSelector from "./VariantSelector";
 import AddToCartButton from "./AddToCartButton";
@@ -217,7 +218,7 @@ export default function ProductDetailClient({
     <div className="min-h-screen bg-background pt-28 pb-20">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
       />
       <div className="max-w-6xl mx-auto px-6 sm:px-10">
         {/* Breadcrumb */}

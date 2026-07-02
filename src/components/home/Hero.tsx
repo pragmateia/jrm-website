@@ -10,9 +10,13 @@ export default function Hero() {
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
 
-  // Pick the right video file based on viewport width
+  // Pick the right video file based on viewport width. This must run
+  // client-side (window is unavailable during SSR) and must run exactly ONCE
+  // at mount — re-deriving on resize/rotation would swap the src mid-play and
+  // restart the video (see hero video lessons in CLAUDE.md before changing).
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional mount-only client detection; src must not be rendered during SSR
     setVideoSrc(
       isMobile
         ? "/videos/hero-home-mobile.mp4"

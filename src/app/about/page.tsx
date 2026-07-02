@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import FAQSection from "@/components/FAQSection";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 const aboutFAQs = [
   {
@@ -464,7 +465,7 @@ export default function AboutPage() {
       {/* FAQPage JSON-LD */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutFAQJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(aboutFAQJsonLd) }}
       />
     </div>
   );

@@ -52,9 +52,12 @@ export async function shopifyFetch(query: string, variables?: Record<string, unk
 export async function getProducts(
   first: number = 12
 ): Promise<ShopifyProduct[]> {
+  // Clamp to a sane integer — `first` is interpolated into the query string,
+  // so never allow anything that isn't a plain number through.
+  const count = Math.min(Math.max(Math.floor(first) || 1, 1), 250);
   const query = `
     {
-      products(first: ${first}, sortKey: BEST_SELLING) {
+      products(first: ${count}, sortKey: BEST_SELLING) {
         edges {
           node {
             id

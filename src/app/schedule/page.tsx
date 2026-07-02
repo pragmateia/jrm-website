@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import PageHero from "@/components/PageHero";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 export const metadata: Metadata = {
   title: "Schedule",
@@ -184,7 +185,7 @@ export default function SchedulePage() {
     <div>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(sportsEventsJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(sportsEventsJsonLd) }}
       />
 
       <PageHero

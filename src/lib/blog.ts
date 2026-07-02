@@ -55,6 +55,12 @@ export function getAllPosts(): BlogPostMeta[] {
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  // Slugs come from the URL — restrict to safe filename characters so the
+  // path.join below can never traverse outside the blog directory.
+  if (!/^[a-zA-Z0-9_-]+$/.test(slug)) {
+    return null;
+  }
+
   const fullPath = path.join(postsDirectory, `${slug}.md`);
 
   if (!fs.existsSync(fullPath)) {

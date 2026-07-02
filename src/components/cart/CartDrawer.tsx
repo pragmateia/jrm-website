@@ -129,6 +129,7 @@ export default function CartDrawer() {
                             : updateItem(line.id, line.quantity - 1)
                         }
                         disabled={isLoading}
+                        aria-label="Decrease quantity"
                         className="w-6 h-6 flex items-center justify-center border border-white/15 text-white/50 hover:text-white hover:border-white/30 transition-colors text-xs disabled:opacity-30"
                       >
                         -
@@ -141,6 +142,7 @@ export default function CartDrawer() {
                           updateItem(line.id, line.quantity + 1)
                         }
                         disabled={isLoading}
+                        aria-label="Increase quantity"
                         className="w-6 h-6 flex items-center justify-center border border-white/15 text-white/50 hover:text-white hover:border-white/30 transition-colors text-xs disabled:opacity-30"
                       >
                         +

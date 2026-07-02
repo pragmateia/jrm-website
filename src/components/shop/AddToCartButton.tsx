@@ -28,6 +28,7 @@ export default function AddToCartButton({
         <div className="flex items-center border border-white/15">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            aria-label="Decrease quantity"
             className="w-9 h-9 flex items-center justify-center text-white/50 hover:text-white transition-colors text-sm"
           >
             -
@@ -37,6 +38,7 @@ export default function AddToCartButton({
           </span>
           <button
             onClick={() => setQuantity(quantity + 1)}
+            aria-label="Increase quantity"
             className="w-9 h-9 flex items-center justify-center text-white/50 hover:text-white transition-colors text-sm"
           >
             +

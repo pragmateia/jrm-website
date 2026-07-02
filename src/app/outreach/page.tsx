@@ -3,6 +3,7 @@ import Image from "next/image";
 import ContactForm from "@/components/ContactForm";
 import PageHero from "@/components/PageHero";
 import FAQSection from "@/components/FAQSection";
+import { serializeJsonLd } from "@/lib/jsonld";
 
 const outreachFAQs = [
   {
@@ -213,7 +214,7 @@ export default function OutreachPage() {
       {/* FAQPage JSON-LD */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(outreachFAQJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(outreachFAQJsonLd) }}
       />
     </div>
   );

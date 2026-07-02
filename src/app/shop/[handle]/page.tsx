@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProductByHandle } from "@/lib/shopify";
+import { serializeJsonLd } from "@/lib/jsonld";
 import ProductDetailClient from "@/components/shop/ProductDetailClient";
 
 interface Props {
@@ -73,7 +74,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(productJsonLd) }}
       />
       <ProductDetailClient product={product} initialColor={color} />
     </>

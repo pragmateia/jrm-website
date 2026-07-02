@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 
 interface GalleryImage {
   url: string;
@@ -31,10 +31,15 @@ export default function ProductGallery({
     return images.filter((img) => variantImageUrls.has(img.url));
   }, [images, variantImageUrls]);
 
-  // Reset to front side when the selected color changes
-  useEffect(() => {
+  // Reset to front side when the selected color changes. State is adjusted
+  // during render (the React-recommended pattern for "state derived from a
+  // prop change") instead of in an effect, so there's no extra render pass
+  // showing the previous color's back image.
+  const [prevSelected, setPrevSelected] = useState(selectedImage);
+  if (prevSelected !== selectedImage) {
+    setPrevSelected(selectedImage);
     setActiveSide("front");
-  }, [selectedImage]);
+  }
 
   // Determine what to show in the main display
   const showBack = activeSide === "back" && backImage;
