@@ -78,5 +78,18 @@ Shopify's fulfillment status is NOT reliable for this store. Tracking/status don
 - Follow any tracking number (even buried in timeline events) through to the carrier before concluding it hasn't shipped.
 - Printful orders have a different failure mode (see next lesson); same conclusion — don't trust Shopify status alone.
 
+### Single-variant / no-color products (found 2026-07-02 with Athletic Hat; handled in code 2026-07-02)
+Facts that still apply to every new product:
+- **`/shop` only lists products whose handles are in `STYLE_CARDS`** (`src/lib/product-categories.ts`) — new products are invisible on the shop grid AND marquee until a style card entry is added and deployed. This is a code allowlist, NOT a Shopify collection.
+- The Storefront API returns the product's featured image as the variant image for a "Default Title" single variant.
+
+Handled in code (don't re-break):
+- `ProductGallery` has a `showAllThumbnails` mode (passed by `ProductDetailClient` when the product has NO color option): every product image becomes a selectable thumbnail with local selection state, and the Front/Back toggle is skipped. The multi-color Printify front/back pairing path is untouched — the flag defaults to false.
+- `ProductDetailClient` hides `VariantSelector` when the only option is Shopify's placeholder "Title: Default Title".
+- Shop page marquee + `ShopProductGrid` category rows special-case `v.title === "Default Title"`: plain product title, no variant label, no `?color=` param.
+
+### Shopify admin via Playwright MCP — media upload without a file-chooser tool (2026-07-02)
+The admin page CSP (`connect-src https: wss: blob: data:`) blocks fetching from `http://127.0.0.1`. Working pattern: serve files from a localhost HTTP server, `window.open` a sender page on that origin from the admin tab (popup blocking is disabled in Playwright), `postMessage` the ArrayBuffers back, then set `input.files` on the media `<input type="file">` — which lives inside a SHADOW ROOT (pierce with a shadow-DOM walk; `document.querySelectorAll` won't find it). Dispatch ONLY a `change` event: dispatching both `input` and `change` uploads every file twice. The admin file editor (alt text) can leave a stuck FocalPointTool overlay that intercepts clicks — reload the product page between edits.
+
 ### Printful CODE 1002 — duplicate Shopify products
 If a Printful item fails to fulfill with "No suitable order items found [CODE: 1002]", the cause is duplicate Shopify products: customers bought from an old (Unlisted) product while Printful is mapped to a newer (Active) duplicate with different variant IDs. Fix pattern (applied 2026-04-02 to both Beach Volleyball Hoodies): rename old handles to `-old`, swap the Printful-synced product's handle to the customer-facing one, archive the old duplicates. Consolidate to the single product Printful is mapped to.

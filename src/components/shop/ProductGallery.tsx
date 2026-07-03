@@ -14,22 +14,33 @@ export default function ProductGallery({
   backImage,
   variantImageUrls,
   onImageSelect,
+  showAllThumbnails = false,
 }: {
   images: GalleryImage[];
   selectedImage?: string | null;
   backImage?: GalleryImage | null;
   variantImageUrls?: Set<string>;
   onImageSelect?: (url: string) => void;
+  /** Products with no color option (e.g. single-variant Athletic Hat):
+   *  show every product image as a selectable thumbnail and track the
+   *  selection locally, since there is no color to map clicks to.
+   *  The multi-color front/back pairing path is unaffected. */
+  showAllThumbnails?: boolean;
 }) {
   const [activeSide, setActiveSide] = useState<"front" | "back">("front");
 
+  // Local selection for showAllThumbnails mode only
+  const [localSelected, setLocalSelected] = useState<string | null>(null);
+
   // Sidebar thumbnails: show only variant front images (one per color).
   // This prevents back images and duplicate-color images from cluttering the sidebar.
+  // In showAllThumbnails mode, every product image is a thumbnail.
   const sidebarImages = useMemo(() => {
+    if (showAllThumbnails) return images;
     if (!variantImageUrls || variantImageUrls.size === 0) return images;
     // Preserve Shopify image order but filter to only variant front images
     return images.filter((img) => variantImageUrls.has(img.url));
-  }, [images, variantImageUrls]);
+  }, [images, variantImageUrls, showAllThumbnails]);
 
   // Reset to front side when the selected color changes. State is adjusted
   // during render (the React-recommended pattern for "state derived from a
@@ -42,11 +53,15 @@ export default function ProductGallery({
   }
 
   // Determine what to show in the main display
-  const showBack = activeSide === "back" && backImage;
+  const showBack = !showAllThumbnails && activeSide === "back" && backImage;
   const frontImage = selectedImage
     ? images.find((img) => img.url === selectedImage) || images[0]
     : images[0];
-  const mainImage = showBack ? backImage : frontImage;
+  const localImage =
+    showAllThumbnails && localSelected
+      ? images.find((img) => img.url === localSelected) || null
+      : null;
+  const mainImage = localImage ?? (showBack ? backImage : frontImage);
 
   if (images.length === 0) {
     return (
@@ -66,11 +81,17 @@ export default function ProductGallery({
             <button
               key={img.url}
               onClick={() => {
+                if (showAllThumbnails) {
+                  setLocalSelected(img.url);
+                  return;
+                }
                 setActiveSide("front");
                 onImageSelect?.(img.url);
               }}
               className={`flex-shrink-0 w-16 h-20 relative overflow-hidden bg-[#e8e8e8] border transition-colors ${
-                img.url === selectedImage && activeSide === "front"
+                (showAllThumbnails
+                  ? img.url === (localSelected ?? frontImage?.url)
+                  : img.url === selectedImage && activeSide === "front")
                   ? "border-gold"
                   : "border-white/10 hover:border-white/30"
               }`}
@@ -104,8 +125,9 @@ export default function ProductGallery({
           )}
         </div>
 
-        {/* Front/Back toggle — only shown when a back image is available */}
-        {backImage && frontImage && (
+        {/* Front/Back toggle — only shown when a back image is available.
+            Skipped in showAllThumbnails mode (all images are thumbnails). */}
+        {!showAllThumbnails && backImage && frontImage && (
           <div className="flex justify-center gap-3">
             <button
               onClick={() => setActiveSide("front")}

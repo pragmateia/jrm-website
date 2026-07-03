@@ -163,13 +163,19 @@ export default function ShopProductGrid({
                   style={{ minWidth: "max-content" }}
                 >
                   {product.variants.map((v) => {
+                    // Single-variant products have Shopify's placeholder
+                    // "Default Title" — no color param, no variant label
+                    const isDefaultTitle = v.title === "Default Title";
                     const color = v.title.includes(" / ")
                       ? v.title.split(" / ")[0]
                       : v.title;
+                    const href = isDefaultTitle
+                      ? `/shop/${v.productHandle}`
+                      : `/shop/${v.productHandle}?color=${encodeURIComponent(color)}`;
                     return (
                       <Link
                         key={v.id}
-                        href={`/shop/${v.productHandle}?color=${encodeURIComponent(color)}`}
+                        href={href}
                         className="group flex-shrink-0 w-[200px] sm:w-[220px]"
                       >
                         <div className="aspect-[3/4] relative bg-white/[0.06] border border-white/[0.06] overflow-hidden mb-2">
@@ -196,9 +202,11 @@ export default function ShopProductGrid({
                             </div>
                           )}
                         </div>
-                        <p className="text-[11px] text-white/50 line-clamp-1">
-                          {v.title}
-                        </p>
+                        {!isDefaultTitle && (
+                          <p className="text-[11px] text-white/50 line-clamp-1">
+                            {v.title}
+                          </p>
+                        )}
                         <p className="text-[11px] text-white/40">
                           ${parseFloat(v.price).toFixed(2)}
                         </p>

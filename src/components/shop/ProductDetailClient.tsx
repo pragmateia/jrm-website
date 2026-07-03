@@ -103,6 +103,15 @@ export default function ProductDetailClient({
     return opt?.name ?? null;
   }, [product.options]);
 
+  // Shopify's placeholder option for products with no real options
+  // (single variant, e.g. Athletic Hat): one option "Title" whose only
+  // value is "Default Title". Hide the variant selector for these.
+  const hasOnlyDefaultVariant =
+    product.options.length === 1 &&
+    product.options[0].name === "Title" &&
+    product.options[0].values.length === 1 &&
+    product.options[0].values[0] === "Default Title";
+
   // Map image URL → color name for thumbnail click → color selection
   // Uses filename matching first (Printify names contain color + front/back),
   // falls back to proximity-based matching for images with numeric filenames
@@ -247,6 +256,7 @@ export default function ProductDetailClient({
             selectedImage={selectedVariant?.image?.url}
             backImage={backImage}
             variantImageUrls={variantImageUrls}
+            showAllThumbnails={!colorOptionName}
             onImageSelect={(url) => {
               const color = imageToColor.get(url);
               if (color && colorOptionName) handleOptionChange(colorOptionName, color);
@@ -261,15 +271,18 @@ export default function ProductDetailClient({
 
             <p className="text-lg text-white/60 font-body mb-6">${price}</p>
 
-            {/* Variant selectors */}
-            <div className="mb-8">
-              <VariantSelector
-                options={product.options}
-                variants={variants}
-                selectedOptions={selectedOptions}
-                onOptionChange={handleOptionChange}
-              />
-            </div>
+            {/* Variant selectors — hidden for single-variant products where
+                Shopify only has the placeholder "Title: Default Title" option */}
+            {!hasOnlyDefaultVariant && (
+              <div className="mb-8">
+                <VariantSelector
+                  options={product.options}
+                  variants={variants}
+                  selectedOptions={selectedOptions}
+                  onOptionChange={handleOptionChange}
+                />
+              </div>
+            )}
 
             {/* Add to cart */}
             <AddToCartButton

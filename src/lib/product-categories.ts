@@ -75,4 +75,9 @@ export const STYLE_CARDS: StyleCard[] = [
     subtitle: "Hoodie",
     handles: ["beach-volleyball-hoodie-dark", "beach-volleyball-hoodie-dark-1"],
   },
+  {
+    label: "Athletic",
+    subtitle: "Hat",
+    handles: ["athletic-hat"],
+  },
 ];

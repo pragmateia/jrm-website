@@ -139,12 +139,15 @@ export default async function ShopPage() {
   const marqueeItems = curatedVariants.length > 0
     ? shuffle(curatedVariants.flatMap((v) => {
         const frontUrl = v.image?.url || "/images/logo-white.png";
+        // Single-variant products carry Shopify's placeholder "Default Title" —
+        // use the plain product title and no color param for those
+        const isDefaultTitle = v.title === "Default Title";
         const color = v.title.includes(" / ") ? v.title.split(" / ")[0] : v.title;
-        const colorParam = `?color=${encodeURIComponent(color)}`;
+        const colorParam = isDefaultTitle ? "" : `?color=${encodeURIComponent(color)}`;
         const items = [
           {
             id: v.id,
-            title: `${v.product.title} — ${v.title}`,
+            title: isDefaultTitle ? v.product.title : `${v.product.title} — ${v.title}`,
             image: frontUrl,
             href: `/shop/${v.product.handle}${colorParam}`,
           },
@@ -156,7 +159,9 @@ export default async function ShopPage() {
           if (back) {
             items.push({
               id: `${v.id}-back`,
-              title: `${v.product.title} — ${v.title} (Back)`,
+              title: isDefaultTitle
+                ? v.product.title
+                : `${v.product.title} — ${v.title} (Back)`,
               image: back.url,
               href: `/shop/${v.product.handle}${colorParam}`,
             });
