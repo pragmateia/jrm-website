@@ -66,6 +66,21 @@ export const STYLE_CARDS: StyleCard[] = [
     handles: ["street-tee-dark-comfort-colors"],
   },
   {
+    label: "Classic Heavyweight",
+    subtitle: "T-Shirt",
+    handles: ["classic-jesus-rules-heavyweight-t-shirt"],
+  },
+  {
+    label: "Skateboard",
+    subtitle: "Heavyweight Tee",
+    handles: ["skate-tee"],
+  },
+  {
+    label: "Beach Volleyball",
+    subtitle: "Heavyweight Tee",
+    handles: ["beach-volleyball-tee"],
+  },
+  {
     label: "Light",
     subtitle: "Hoodie",
     handles: ["beach-volleyball-hoodie", "beach-volleyball-hoodie-light"],
