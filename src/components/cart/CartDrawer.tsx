@@ -180,7 +180,7 @@ export default function CartDrawer() {
               Checkout
             </a>
             <p className="text-[10px] text-white/50 text-center mt-3">
-              Made to order. Please allow about 2 weeks for delivery.
+              Made to order. Please allow about 2 weeks to ship.
             </p>
             <p className="text-[10px] text-white/50 text-center mt-1">
               Shipping & taxes calculated at checkout
