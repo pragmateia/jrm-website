@@ -91,6 +91,11 @@ export const STYLE_CARDS: StyleCard[] = [
     handles: ["beach-volleyball-hoodie-dark", "beach-volleyball-hoodie-dark-1"],
   },
   {
+    label: "Skateboard",
+    subtitle: "Hoodie",
+    handles: ["skateboard-hoodie"],
+  },
+  {
     label: "Athletic",
     subtitle: "Hat",
     handles: ["athletic-hat"],

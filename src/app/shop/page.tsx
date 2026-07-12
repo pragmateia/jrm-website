@@ -95,6 +95,52 @@ export default async function ShopPage() {
     productImagesMap.set(pi.handle, pi);
   }
 
+  // Helper: map color name -> back image via filename matching (Printify and
+  // Printful filenames contain the color slug + "back"). Longest slug is
+  // tested first so "vintage-black" wins over "black". Used before the
+  // proximity fallback because Printful media order can interleave colors.
+  function buildBackImageMap(
+    prodImgs: ProductImages,
+    colors: string[]
+  ): Map<string, { url: string; altText: string | null }> {
+    const bySlugLenDesc = Array.from(new Set(colors)).sort(
+      (a, b) => b.length - a.length
+    );
+    const map = new Map<string, { url: string; altText: string | null }>();
+    for (const img of prodImgs.images) {
+      if (prodImgs.variantImageUrls.has(img.url)) continue;
+      const filename =
+        img.url.split("/").pop()?.split("?")[0]?.toLowerCase() ?? "";
+      if (!filename.includes("back")) continue;
+      for (const color of bySlugLenDesc) {
+        const slug = color.toLowerCase().replace(/\s+/g, "-");
+        if (filename.includes(slug) && !map.has(color)) {
+          map.set(color, img);
+          break;
+        }
+      }
+    }
+    return map;
+  }
+
+  // Pre-build back-image maps per curated product (marquee pairing)
+  const colorsByHandle = new Map<string, string[]>();
+  for (const v of variants) {
+    if (v.title === "Default Title") continue;
+    const color = v.title.includes(" / ") ? v.title.split(" / ")[0] : v.title;
+    const arr = colorsByHandle.get(v.product.handle) ?? [];
+    arr.push(color);
+    colorsByHandle.set(v.product.handle, arr);
+  }
+  const backMapByHandle = new Map<
+    string,
+    Map<string, { url: string; altText: string | null }>
+  >();
+  for (const [handle, colors] of colorsByHandle) {
+    const pi = productImagesMap.get(handle);
+    if (pi) backMapByHandle.set(handle, buildBackImageMap(pi, colors));
+  }
+
   // Build style card data — resolve cover images and variant counts from
   // productImages (which includes ALL products from the API, not just the
   // L-size-filtered variants).  This ensures style cards always have images
@@ -152,10 +198,14 @@ export default async function ShopPage() {
             href: `/shop/${v.product.handle}${colorParam}`,
           },
         ];
-        // Add back image if available (not a size chart)
+        // Add back image if available (not a size chart) — filename match
+        // first, proximity fallback second
         const prodImgs = productImagesMap.get(v.product.handle);
         if (prodImgs && v.image?.url) {
-          const back = findBackImage(v.image.url, prodImgs);
+          const back =
+            (!isDefaultTitle &&
+              backMapByHandle.get(v.product.handle)?.get(color)) ||
+            findBackImage(v.image.url, prodImgs);
           if (back) {
             items.push({
               id: `${v.id}-back`,

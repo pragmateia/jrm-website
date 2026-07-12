@@ -105,7 +105,7 @@ export default function ShopProductGrid({
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {styleCards.map((card) => (
               <Link
-                key={card.label}
+                key={`${card.label}-${card.subtitle}`}
                 href={`/shop/${card.handles[0]}`}
                 className="group relative aspect-[3/4] overflow-hidden text-left border border-white/[0.06] bg-white/[0.03]"
               >
