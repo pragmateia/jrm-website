@@ -58,12 +58,7 @@ export const STYLE_CARDS: StyleCard[] = [
   {
     label: "Classic",
     subtitle: "T-Shirt",
-    handles: ["classic-dark-jesus-rules-t-shirt", "classic-light-jesus-rules-t-shirt"],
-  },
-  {
-    label: "Street",
-    subtitle: "T-Shirt",
-    handles: ["street-tee-dark-comfort-colors"],
+    handles: ["classic-dark-jesus-rules-t-shirt"],
   },
   {
     label: "Classic Heavyweight",
@@ -83,12 +78,12 @@ export const STYLE_CARDS: StyleCard[] = [
   {
     label: "Light",
     subtitle: "Hoodie",
-    handles: ["beach-volleyball-hoodie", "beach-volleyball-hoodie-light"],
+    handles: ["beach-volleyball-hoodie"],
   },
   {
     label: "Dark",
     subtitle: "Hoodie",
-    handles: ["beach-volleyball-hoodie-dark", "beach-volleyball-hoodie-dark-1"],
+    handles: ["beach-volleyball-hoodie-dark"],
   },
   {
     label: "Skateboard",
