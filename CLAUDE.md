@@ -7,7 +7,7 @@ Next.js 16 + Tailwind v4 codebase deployed to Vercel at `jesusrules.co`. Source 
 - **Hosting:** Vercel project `pragmateia/jrm-website` (account/team facts: `~/Documents/Pragmateia LLC/CLAUDE.md` — single home; billing email diego.perez@pragmateia.com)
   - Production URL: `jrm-website-jktu4k3am-pragmateia.vercel.app`
   - Custom domain: `jesusrules.co`
-- **GitHub:** `jesusrules-co/jrm-website` (private), account `jesusrules-co` (jesusrules.co@gmail.com)
+- **GitHub:** `pragmateia/jrm-website` (private) — all business repos live in the pragmateia org, pushed as `diegonickperez` (see `reference_mcp_servers.md` in auto-memory)
 - **Domain registrar:** WordPress.com / Automattic. Renews 2027-02-17. Privacy on. Nameservers point to Vercel (ns1/ns2.vercel-dns.com).
 
 ## Integrations
