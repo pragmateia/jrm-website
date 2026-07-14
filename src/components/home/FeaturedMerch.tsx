@@ -13,6 +13,16 @@ export default async function FeaturedMerch() {
   const shopifyProducts = await getFeaturedProducts();
   const hasShopify = shopifyProducts.length > 0;
 
+  /** Prefer the first live variant's image — products keep media for
+   *  discontinued colors, so images[0] can show a color no longer sold. */
+  function coverImage(product: (typeof shopifyProducts)[number]) {
+    return (
+      product.variants?.edges[0]?.node.image ??
+      product.images.edges[0]?.node ??
+      null
+    );
+  }
+
   return (
     <section className="py-12 sm:py-16 bg-background">
       {/* Header */}
@@ -46,10 +56,10 @@ export default async function FeaturedMerch() {
                   className="group relative flex-shrink-0 w-[75vw] sm:w-[45vw] lg:w-[30vw] overflow-hidden"
                 >
                   <div className="aspect-[3/4] relative bg-white/5">
-                    {product.images.edges[0] ? (
+                    {coverImage(product) ? (
                       <Image
-                        src={product.images.edges[0].node.url}
-                        alt={product.images.edges[0].node.altText || product.title}
+                        src={coverImage(product)!.url}
+                        alt={coverImage(product)!.altText || product.title}
                         fill
                         className="object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
                         sizes="(max-width: 640px) 75vw, (max-width: 1024px) 45vw, 30vw"

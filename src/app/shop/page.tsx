@@ -152,9 +152,15 @@ export default async function ShopPage() {
     for (const handle of card.handles) {
       const pi = productImagesMap.get(handle);
       if (pi) {
-        // Use the first product-level image as cover (front image of first color)
+        // Use the first CURRENT variant front image as cover. Products keep
+        // media for discontinued colors, so raw images[0] can show a color
+        // that's no longer sold — prefer an image that belongs to a live
+        // variant, falling back to images[0] only if none match.
         if (!coverImage && pi.images.length > 0) {
-          coverImage = pi.images[0].url;
+          const firstVariantFront = pi.images.find((img) =>
+            pi.variantImageUrls.has(img.url)
+          );
+          coverImage = (firstVariantFront ?? pi.images[0]).url;
         }
         // Count unique color variants (from the variantsByProduct list if available,
         // otherwise fall back to variantImageUrls which has one per color+size combo)

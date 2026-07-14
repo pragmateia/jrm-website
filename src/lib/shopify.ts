@@ -21,6 +21,15 @@ export interface ShopifyProduct {
       };
     }[];
   };
+  /** First live variant's image — products keep media for discontinued
+   *  colors, so this is safer than images[0] for card/cover art. */
+  variants?: {
+    edges: {
+      node: {
+        image: { url: string; altText: string | null } | null;
+      };
+    }[];
+  };
   onlineStoreUrl: string | null;
 }
 
@@ -75,6 +84,16 @@ export async function getProducts(
                 node {
                   url
                   altText
+                }
+              }
+            }
+            variants(first: 1) {
+              edges {
+                node {
+                  image {
+                    url
+                    altText
+                  }
                 }
               }
             }
