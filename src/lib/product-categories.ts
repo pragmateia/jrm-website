@@ -58,12 +58,7 @@ export const STYLE_CARDS: StyleCard[] = [
   {
     label: "Classic",
     subtitle: "T-Shirt",
-    handles: ["classic-dark-jesus-rules-t-shirt"],
-  },
-  {
-    label: "Classic Pink",
-    subtitle: "T-Shirt",
-    handles: ["classic-light-jesus-rules-t-shirt"],
+    handles: ["classic-jesus-rules-t-shirt"],
   },
   {
     label: "Classic Heavyweight",
